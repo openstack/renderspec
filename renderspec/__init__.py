@@ -19,7 +19,9 @@ from __future__ import print_function
 import argparse
 import os
 import platform
-from jinja2 import Environment, FileSystemLoader
+
+from jinja2 import Environment
+from jinja2 import FileSystemLoader
 
 
 ###############

@@ -19,6 +19,7 @@ from __future__ import print_function
 import argparse
 import os
 import platform
+import sys
 
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
@@ -94,29 +95,63 @@ def _get_default_distro():
         return "unknown"
 
 
+def _get_default_template():
+    fns = [f for f in os.listdir('.')
+           if os.path.isfile(f) and f.endswith('.spec.j2')]
+    if not fns:
+        return None, ("No *.spec.j2 templates found. "
+                      "See `renderspec -h` for usage.")
+    elif len(fns) > 1:
+        return None, ("Multiple *.spec.j2 templates found, "
+                      "please specify one.\n"
+                      "See `renderspec -h` for usage.")
+    else:
+        return fns[0], None
+
+
 def process_args():
     distro = _get_default_distro()
     parser = argparse.ArgumentParser(
         description="Convert a .spec.j2 template into a .spec")
     parser.add_argument("-o", "--output",
-                        help="output filename instead of stdout")
+                        help="output filename or '-' for stdout. "
+                        "default: autodetect")
     parser.add_argument("--spec-style", help="distro style you want to use. "
                         "default: %s" % (distro), default=distro,
                         choices=['suse', 'fedora'])
-    parser.add_argument("input-template",
-                        help="specfile jinja2 template to use")
+    parser.add_argument("input-template", nargs='?',
+                        help="specfile jinja2 template to render. "
+                        "default: *.spec.j2")
     return vars(parser.parse_args())
 
 
 def main():
     args = process_args()
-    spec = generate_spec(args['spec_style'], args['input-template'])
-    if args['output']:
-        with open(args['output'], "w") as o:
+
+    # autodetect input/output fns if possible
+    input_template = args['input-template']
+    if not input_template:
+        input_template, errmsg = _get_default_template()
+        if not input_template:
+            print(errmsg)
+            return 1
+    output_fn = args['output']
+    if not output_fn:
+        if not input_template.endswith('.spec.j2'):
+            print("Failed to autodetect output file name. "
+                  "Please specify using `-o/--output`.")
+            return 2
+        output_fn, _, _ = input_template.rpartition('.')
+
+    spec = generate_spec(args['spec_style'], input_template)
+    if output_fn and output_fn != '-':
+        print("Rendering: %s -> %s" % (input_template, output_fn))
+        with open(output_fn, "w") as o:
             o.write(spec)
     else:
         print(spec)
+    return 0
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

@@ -66,11 +66,11 @@ def generate_spec(spec_style, input_template_path):
     env = Environment(loader=FileSystemLoader(
         os.path.dirname(input_template_path)))
 
-    # register dist specific filter
+    # register dist specific filters
     if spec_style == 'suse':
-        env.filters['license_normalize'] = _filter_noop
+        env.filters['license'] = _filter_noop
     elif spec_style == 'fedora':
-        env.filters['license_normalize'] = _filter_license_spdx2fedora
+        env.filters['license'] = _filter_license_spdx2fedora
     else:
         raise Exception("Unknown spec style '%s' given" % (spec_style))
 
@@ -78,7 +78,7 @@ def generate_spec(spec_style, input_template_path):
     def _filter_python_module2package(value):
         return pymod2pkg.module2package(value, spec_style)
 
-    env.filters['pypackname_normalize'] = _filter_python_module2package
+    env.filters['py2pkg'] = _filter_python_module2package
 
     template = env.get_template(os.path.basename(input_template_path))
     return template.render()

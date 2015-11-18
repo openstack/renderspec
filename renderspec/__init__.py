@@ -22,6 +22,7 @@ import platform
 
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
+import pymod2pkg
 
 
 ###############
@@ -60,11 +61,6 @@ def _filter_license_spdx2fedora(value):
     return mapping[value]
 
 
-def _filter_pypackname(value):
-    # FIXME(toabctl): use pymod2pkg when it supports SUSE and Fedora
-    return "python-%s" % (value)
-
-
 def generate_spec(spec_style, input_template_path):
     """generate a spec file with the given style and the given template"""
     env = Environment(loader=FileSystemLoader(
@@ -77,8 +73,12 @@ def generate_spec(spec_style, input_template_path):
         env.filters['license_normalize'] = _filter_license_spdx2fedora
     else:
         raise Exception("Unknown spec style '%s' given" % (spec_style))
-    # common filters
-    env.filters['pypackname_normalize'] = _filter_pypackname
+
+    # use pymod2pkg to translate python module names to package names
+    def _filter_python_module2package(value):
+        return pymod2pkg.module2package(value, spec_style)
+
+    env.filters['pypackname_normalize'] = _filter_python_module2package
 
     template = env.get_template(os.path.basename(input_template_path))
     return template.render()

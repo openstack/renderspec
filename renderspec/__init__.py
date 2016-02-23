@@ -21,20 +21,36 @@ import os
 import platform
 import sys
 
+from jinja2 import contextfilter
+from jinja2 import contextfunction
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
 import pymod2pkg
 
-
-###############
-# jinja2 filter
-###############
-def _filter_noop(value):
-    """do nothing filter"""
-    return value
+import yaml
 
 
-def _filter_license_spdx2fedora(value):
+def _context_py2pkg(context, pkg_name, pkg_version=None):
+    """generate a distro specific package name with optional version tuple."""
+    # package name handling
+    name = pymod2pkg.module2package(pkg_name, context['spec_style'])
+
+    # pkg_version is a tuple with comperator and number, i.e. "('>=', '1.2.3')"
+    if pkg_version:
+        # epoch handling
+        if pkg_name in context['epochs'].keys():
+            epoch = '%s:' % context['epochs'][pkg_name]
+        else:
+            epoch = ''
+        v_comparator, v_number = pkg_version
+        v_str = ' %s %s%s' % (v_comparator, epoch, v_number)
+    else:
+        v_str = ''
+
+    return '%s%s' % (name, v_str)
+
+
+def _context_license_spdx(context, value):
     """convert a given known spdx license to another one"""
     # more values can be taken from from https://github.com/hughsie/\
     #    appstream-glib/blob/master/libappstream-builder/asb-package-rpm.c#L76
@@ -59,30 +75,56 @@ def _filter_license_spdx2fedora(value):
         "MPL-2.0": "MPLv2.0",
         "Python-2.0": "Python",
     }
-    return mapping[value]
+
+    if context['spec_style'] == 'fedora':
+        return mapping[value]
+    else:
+        # just use the spdx license name
+        return value
 
 
-def generate_spec(spec_style, input_template_path):
+###############
+# jinja2 filter
+###############
+@contextfilter
+def _filter_license_spdx(context, value):
+    return _context_license_spdx(context, value)
+
+
+@contextfilter
+def _filter_python_module2package(context, pkg_name, pkg_version=None):
+    return _context_py2pkg(context, pkg_name, pkg_version)
+
+
+################
+# jinja2 globals
+################
+@contextfunction
+def _globals_py2pkg(context, pkg_name, pkg_version=None):
+    return _context_py2pkg(context, pkg_name, pkg_version)
+
+
+@contextfunction
+def _globals_license_spdx(context, value):
+    return _context_license_spdx(context, value)
+
+
+def _env_register_filters_and_globals(env):
+    """register all the jinja2 filters we want in the environment"""
+    env.filters['license'] = _filter_license_spdx
+    env.filters['py2pkg'] = _filter_python_module2package
+    env.globals['py2pkg'] = _globals_py2pkg
+
+
+def generate_spec(spec_style, epochs, input_template_path):
     """generate a spec file with the given style and the given template"""
     env = Environment(loader=FileSystemLoader(
         os.path.dirname(input_template_path)))
 
-    # register dist specific filters
-    if spec_style == 'suse':
-        env.filters['license'] = _filter_noop
-    elif spec_style == 'fedora':
-        env.filters['license'] = _filter_license_spdx2fedora
-    else:
-        raise Exception("Unknown spec style '%s' given" % (spec_style))
-
-    # use pymod2pkg to translate python module names to package names
-    def _filter_python_module2package(value):
-        return pymod2pkg.module2package(value, spec_style)
-
-    env.filters['py2pkg'] = _filter_python_module2package
+    _env_register_filters_and_globals(env)
 
     template = env.get_template(os.path.basename(input_template_path))
-    return template.render()
+    return template.render(spec_style=spec_style, epochs=epochs)
 
 
 def _get_default_distro():
@@ -109,6 +151,15 @@ def _get_default_template():
         return fns[0], None
 
 
+def _get_epochs(filename):
+    """get a dictionary with pkg-name->epoch mapping"""
+    if os.path.exists(filename):
+        with open(filename, 'r') as f:
+            data = yaml.load(f.read())
+            return dict(data['epochs'])
+    return {}
+
+
 def process_args():
     distro = _get_default_distro()
     parser = argparse.ArgumentParser(
@@ -119,6 +170,9 @@ def process_args():
     parser.add_argument("--spec-style", help="distro style you want to use. "
                         "default: %s" % (distro), default=distro,
                         choices=['suse', 'fedora'])
+    parser.add_argument("--epochs", help="yaml file with epochs listed. "
+                        "default: %s-epochs.yaml" % (distro),
+                        default="%s-epochs.yaml" % distro)
     parser.add_argument("input-template", nargs='?',
                         help="specfile jinja2 template to render. "
                         "default: *.spec.j2")
@@ -143,7 +197,8 @@ def main():
             return 2
         output_fn, _, _ = input_template.rpartition('.')
 
-    spec = generate_spec(args['spec_style'], input_template)
+    epochs = _get_epochs(args['epochs'])
+    spec = generate_spec(args['spec_style'], epochs, input_template)
     if output_fn and output_fn != '-':
         print("Rendering: %s -> %s" % (input_template, output_fn))
         with open(output_fn, "w") as o:

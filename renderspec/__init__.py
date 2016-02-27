@@ -35,7 +35,7 @@ def _context_py2pkg(context, pkg_name, pkg_version=None):
     # package name handling
     name = pymod2pkg.module2package(pkg_name, context['spec_style'])
 
-    # pkg_version is a tuple with comperator and number, i.e. "('>=', '1.2.3')"
+    # pkg_version is a tuple with comparator and number, i.e. "('>=', '1.2.3')"
     if pkg_version:
         # epoch handling
         if pkg_name in context['epochs'].keys():

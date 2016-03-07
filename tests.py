@@ -81,6 +81,21 @@ class RenderspecContextFunctionTests(unittest.TestCase):
             'python-oslo.config'
         )
 
+    def test_context_epoch_without_epochs(self):
+        self.assertEqual(
+            renderspec._context_epoch(
+                {'spec_style': 'suse', 'epochs': {}}, 'oslo.config'),
+            0
+        )
+
+    def test_context_epoch_with_epochs(self):
+        self.assertEqual(
+            renderspec._context_epoch(
+                {'spec_style': 'suse', 'epochs': {'oslo.config': 4}},
+                'oslo.config'),
+            4
+        )
+
 
 class RenderspecTemplateFilterTests(unittest.TestCase):
     def setUp(self):
@@ -115,6 +130,20 @@ class RenderspecTemplateFilterTests(unittest.TestCase):
             template.render(spec_style='suse', epochs={'requests': '1'}),
             'python-requests >= 1:2.8.1')
 
+    def test_render_filter_epoch_without_epochs(self):
+        template = self.env.from_string(
+            "{{ 'requests' | epoch }}")
+        self.assertEqual(
+            template.render(spec_style='suse', epochs={}),
+            '0')
+
+    def test_render_filter_epoch_with_epochs(self):
+        template = self.env.from_string(
+            "{{ 'requests' | epoch }}")
+        self.assertEqual(
+            template.render(spec_style='suse', epochs={'requests': '1'}),
+            '1')
+
 
 class RenderspecTemplateFunctionTests(unittest.TestCase):
     def setUp(self):
@@ -142,6 +171,20 @@ class RenderspecTemplateFunctionTests(unittest.TestCase):
         self.assertEqual(
             template.render(spec_style='suse', epochs={'requests': '1'}),
             'python-requests >= 1:2.8.1')
+
+    def test_render_func_epoch_without_epochs(self):
+        template = self.env.from_string(
+            "Epoch: {{ epoch('requests') }}")
+        self.assertEqual(
+            template.render(spec_style='suse', epochs={}),
+            'Epoch: 0')
+
+    def test_render_func_epoch_with_epochs(self):
+        template = self.env.from_string(
+            "Epoch: {{ epoch('requests') }}")
+        self.assertEqual(
+            template.render(spec_style='suse', epochs={'requests': 1}),
+            'Epoch: 1')
 
 
 if __name__ == '__main__':

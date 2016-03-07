@@ -30,6 +30,11 @@ import pymod2pkg
 import yaml
 
 
+def _context_epoch(context, pkg_name):
+    """get the epoch (or 0 if unknown) for the given pkg name"""
+    return context['epochs'].get(pkg_name, 0)
+
+
 def _context_py2pkg(context, pkg_name, pkg_version=None):
     """generate a distro specific package name with optional version tuple."""
     # package name handling
@@ -92,6 +97,11 @@ def _filter_license_spdx(context, value):
 
 
 @contextfilter
+def _filter_epoch(context, value):
+    return _context_epoch(context, value)
+
+
+@contextfilter
 def _filter_python_module2package(context, pkg_name, pkg_version=None):
     return _context_py2pkg(context, pkg_name, pkg_version)
 
@@ -105,6 +115,11 @@ def _globals_py2pkg(context, pkg_name, pkg_version=None):
 
 
 @contextfunction
+def _globals_epoch(context, value):
+    return _context_epoch(context, value)
+
+
+@contextfunction
 def _globals_license_spdx(context, value):
     return _context_license_spdx(context, value)
 
@@ -112,8 +127,10 @@ def _globals_license_spdx(context, value):
 def _env_register_filters_and_globals(env):
     """register all the jinja2 filters we want in the environment"""
     env.filters['license'] = _filter_license_spdx
+    env.filters['epoch'] = _filter_epoch
     env.filters['py2pkg'] = _filter_python_module2package
     env.globals['py2pkg'] = _globals_py2pkg
+    env.globals['epoch'] = _globals_epoch
 
 
 def generate_spec(spec_style, epochs, input_template_path):

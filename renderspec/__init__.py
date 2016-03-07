@@ -131,6 +131,7 @@ def _env_register_filters_and_globals(env):
     env.filters['py2pkg'] = _filter_python_module2package
     env.globals['py2pkg'] = _globals_py2pkg
     env.globals['epoch'] = _globals_epoch
+    env.globals['license'] = _globals_license_spdx
 
 
 def generate_spec(spec_style, epochs, input_template_path):

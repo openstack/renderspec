@@ -151,6 +151,13 @@ class RenderspecTemplateFunctionTests(unittest.TestCase):
         self.env = Environment()
         renderspec._env_register_filters_and_globals(self.env)
 
+    def test_render_func_license_spdx(self):
+        template = self.env.from_string(
+            "{{ license('Apache-2.0') }}")
+        self.assertEqual(
+            template.render(spec_style='fedora', epochs={}),
+            'ASL 2.0')
+
     def test_render_func_py2pkg(self):
         template = self.env.from_string(
             "{{ py2pkg('requests') }}")

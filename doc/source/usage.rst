@@ -40,6 +40,14 @@ Rendering the `example.spec.j2` file and also use the epochs can be done with::
 
   renderspec --epochs epochs.yaml example.spec.j2
 
+The ```Epoch:``` field in the spec.j2 file itself can be handled with the ```epoch()```
+context function like this::
+
+  Epoch: {{  epoch('oslo.config') }}
+
+This will add the epoch number from the yaml file or `0` in case there is no epoch file
+or the given name in not available in the yaml file.
+
 .. note:: if no epoch file is available, no epochs are added to the version numbers.
           The epoch file is optional. If a package name is not in the epochs file,
           epoch for that package is not used.
@@ -100,6 +108,23 @@ It's also possible to skip adding required versions and handle that with a
 rendering with `--requirements`, the rendered spec would contain::
 
   BuildRequires:  python-oslo-config >= 4.3.0
+
+
+context function `epoch`
+************************
+
+The epochs are stored in a yaml file. Using the `epoch` context function can be done with::
+
+  Epoch: {{ epoch('oslo.config') }}
+
+Without an yaml file, this would be rendered to::
+
+  Epoch: 0
+
+With an existing yaml (and `oslo.config` epoch set to 2), this would be rendered to::
+
+  Epoch: 2
+
 
 context filter `license`
 ************************

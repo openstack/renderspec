@@ -5,30 +5,34 @@ renderspec
 usable spec file. Distribution specifics like different policies for
 package naming in openSUSE or Fedora are handled.
 
-Installation
+Contents:
+
+.. toctree::
+   :maxdepth: 2
+
+   installation
+   usage
+
+Testing
+=======
+renderspec has currently a couple of unittests. The preferred way to run tests
+is using ``tox``. To run the testsuite for python 2.7, do:
+
+.. code-block:: shell
+
+   tox -epy27
+
+
+Contributing
 ============
+Code is hosted at `git.openstack.org`_. Submit bugs to the
+renderspec project on `Launchpad`_. Submit code to the
+openstack/renderspec project using `Gerrit`_.
 
-From PyPI
-*********
+.. _git.openstack.org: https://git.openstack.org/cgit/openstack/renderspec
+.. _Launchpad: https://launchpad.net/renderspec
+.. _Gerrit: http://docs.openstack.org/infra/manual/developers.html#development-workflow
 
-For your convenience, `renderspec` is also available from the Cheese
-Shop:
-
-.. code-block:: shell
-
-   pip install renderspec
-
-From source
-***********
-
-If you want to hack `renderspec` or just have the latest version without
-waiting for next release, use the git repo directly a la
-
-.. code-block:: shell
-
-   git clone https://git.openstack.org/openstack/renderspec
-   cd renderspec
-   python setup.py develop --user
 
 Indices and tables
 ==================

@@ -1,0 +1,102 @@
+Handling templates
+==================
+
+.. program:: renderspec
+.. highlight:: bash
+
+Templates are based on `Jinja2`_ and usually end with .spec.j2 .
+
+.. note:: There are a lot of examples available in the `openstack/rpm-packaging`_ project.
+
+Rendering a template called `example.spec.j2` can be done with::
+
+  renderspec example.spec.j2
+
+This will output the rendered spec to stdout.
+
+Different styles
+****************
+Different distributions have different spec file styles (i.e. different naming
+policies and different epoch handling policies). :program:`renderspec` automatically
+detects which distibution is used and uses that style. Forcing a specific style can
+be done with::
+
+  renderspec --spec-style suse example.spec.j2
+
+
+Handling epochs
+***************
+
+Different distributions may have different epochs for different packages. This
+is handled with an extra epoch file which must be in yaml format. Here's an example
+of a epoch file called `epochs.yaml`::
+
+  ---
+  epochs:
+      python-dateutil: 3
+      oslo.config: 2
+
+Rendering the `example.spec.j2` file and also use the epochs can be done with::
+
+  renderspec --epochs epochs.yaml example.spec.j2
+
+.. note:: if no epoch file is available, no epochs are added to the version numbers.
+          The epoch file is optional. If a package name is not in the epochs file,
+          epoch for that package is not used.
+
+Template features
+=================
+
+Templates are just plain `Jinja2`_ templates. So all magic (i.e. filters) from
+Jinja can be used in the templates. Beside the Jinja provided features, there are
+some extra features renderspec adds to the template context.
+
+context function `py2pkg`
+*************************
+`py2pkg` is used to
+
+* translate the given pypi name to a distro specific name
+* handle epochs and version
+
+.. note:: For translating pypi names (the name a python package has on `pypi.python.org`_
+          to distro specific names, internally a module called `pymod2pkg`_ is used.
+
+For example, a BuildRequires in a spec.j2 template for the package `oslo.config` in
+version `>= 3.4.0` would be defined as::
+
+  BuildRequires:  {{ py2pkg('oslo.config', ('>=', '3.4.0')) }}
+
+Rendering this template with :program:`renderspec` with the `suse` style would result in::
+
+  BuildRequires:  python-oslo.config >= 3.4.0
+
+Rendering it with the `fedora` style would be::
+
+  BuildRequires:  python-oslo-config >= 3.4.0
+
+With an epoch file and an entry for `oslo.config` set to i.e. `2`, this would be
+rendered on Fedora to::
+
+  BuildRequires:  python-oslo-config >= 2:3.4.0
+
+
+context filter `license`
+************************
+The templates use `SPDX`_ license names and theses names are translated for different distros.
+For example, a project uses the `Apache-2.0` license::
+
+  License: {{ 'Apache-2.0' | license }}
+
+With the `fedora` spec-style, this would be rendered to::
+
+  License: ASL 2.0
+
+With the `suse` spec-style::
+
+  License: Apache-2.0
+
+.. _Jinja2: http://jinja.pocoo.org/docs/dev/
+.. _openstack/rpm-packaging: https://git.openstack.org/cgit/openstack/rpm-packaging/
+.. _pymod2pkg: https://git.openstack.org/cgit/openstack/pymod2pkg
+.. _pypi.python.org: https://pypi.python.org/pypi
+.. _SPDX: https://spdx.org/licenses/

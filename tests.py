@@ -100,31 +100,6 @@ class RenderspecContextFunctionTests(unittest.TestCase):
 
 
 @ddt
-class RenderspecTemplateFilterTests(unittest.TestCase):
-    def setUp(self):
-        """create a Jinja2 environment and register the standard filters"""
-        self.env = Environment()
-        renderspec._env_register_filters_and_globals(self.env)
-
-    @data(
-        # old style
-        ({'spec_style': 'suse', 'epochs': {}, 'requirements': {}},
-         "{{ 'requests' | py2pkg }}", "python-requests"),
-        ({'spec_style': 'suse', 'epochs': {}, 'requirements': {}},
-         "{{ 'requests' | py2pkg }} >= 2.8.1", "python-requests >= 2.8.1"),
-        ({'spec_style': 'suse', 'epochs': {},
-          'requirements': {'requests': '1.2.3'}},
-         "{{ 'requests' | py2pkg }} >= 2.8.1", "python-requests >= 2.8.1"),
-    )
-    @unpack
-    def test_render_filter_py2pkg(self, context, string, expected_result):
-        template = self.env.from_string(string)
-        self.assertEqual(
-            template.render(**context),
-            expected_result)
-
-
-@ddt
 class RenderspecTemplateFunctionTests(unittest.TestCase):
     def setUp(self):
         """create a Jinja2 environment and register the standard filters"""

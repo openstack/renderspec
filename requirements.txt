@@ -1,3 +1,4 @@
 Jinja2>=2.6
 pymod2pkg>=0.3
 PyYAML>=3.1.0  # MIT
+packaging>=16.5

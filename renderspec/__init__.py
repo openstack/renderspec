@@ -29,16 +29,23 @@ import pymod2pkg
 
 import yaml
 
+from renderspec import versions
+
 
 def _context_epoch(context, pkg_name):
     """get the epoch (or 0 if unknown) for the given pkg name"""
     return context['epochs'].get(pkg_name, 0)
 
 
-def _context_py2pkg(context, pkg_name, pkg_version=None):
+def _context_py2pkg(context, pkg_name, pkg_version=None, old_filter=False):
     """generate a distro specific package name with optional version tuple."""
     # package name handling
     name = pymod2pkg.module2package(pkg_name, context['spec_style'])
+
+    # if no pkg_version is given, look in the requirements and set one
+    if not pkg_version and not old_filter:
+        if pkg_name in context['requirements']:
+            pkg_version = ('>=', context['requirements'][pkg_name])
 
     # pkg_version is a tuple with comparator and number, i.e. "('>=', '1.2.3')"
     if pkg_version:
@@ -103,7 +110,7 @@ def _filter_epoch(context, value):
 
 @contextfilter
 def _filter_python_module2package(context, pkg_name, pkg_version=None):
-    return _context_py2pkg(context, pkg_name, pkg_version)
+    return _context_py2pkg(context, pkg_name, pkg_version, old_filter=True)
 
 
 ################
@@ -134,7 +141,7 @@ def _env_register_filters_and_globals(env):
     env.globals['license'] = _globals_license_spdx
 
 
-def generate_spec(spec_style, epochs, input_template_path):
+def generate_spec(spec_style, epochs, requirements, input_template_path):
     """generate a spec file with the given style and the given template"""
     env = Environment(loader=FileSystemLoader(
         os.path.dirname(input_template_path)))
@@ -142,7 +149,8 @@ def generate_spec(spec_style, epochs, input_template_path):
     _env_register_filters_and_globals(env)
 
     template = env.get_template(os.path.basename(input_template_path))
-    return template.render(spec_style=spec_style, epochs=epochs)
+    return template.render(spec_style=spec_style, epochs=epochs,
+                           requirements=requirements)
 
 
 def _get_default_distro():
@@ -178,6 +186,14 @@ def _get_epochs(filename):
     return {}
 
 
+def _get_requirements(filename):
+    """get a dictionary with pkg-name->min-version mapping"""
+    if os.path.exists(filename):
+        with open(filename, 'r') as f:
+            return versions.get_requirements(f.readlines())
+    return {}
+
+
 def process_args():
     distro = _get_default_distro()
     parser = argparse.ArgumentParser(
@@ -194,6 +210,11 @@ def process_args():
     parser.add_argument("input-template", nargs='?',
                         help="specfile jinja2 template to render. "
                         "default: *.spec.j2")
+    parser.add_argument("--requirements", help="file which contains "
+                        "PEP0508 compatible requirement lines."
+                        "default: global-requirements.txt",
+                        default="global-requirements.txt")
+
     return vars(parser.parse_args())
 
 
@@ -216,7 +237,9 @@ def main():
         output_fn, _, _ = input_template.rpartition('.')
 
     epochs = _get_epochs(args['epochs'])
-    spec = generate_spec(args['spec_style'], epochs, input_template)
+    requirements = _get_requirements(args['requirements'])
+    spec = generate_spec(args['spec_style'], epochs, requirements,
+                         input_template)
     if output_fn and output_fn != '-':
         print("Rendering: %s -> %s" % (input_template, output_fn))
         with open(output_fn, "w") as o:

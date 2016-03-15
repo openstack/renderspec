@@ -44,6 +44,22 @@ Rendering the `example.spec.j2` file and also use the epochs can be done with::
           The epoch file is optional. If a package name is not in the epochs file,
           epoch for that package is not used.
 
+Handling requirements
+*********************
+
+Updating versions for `Requires` and `BuildRequires` takes a lot of time.
+:program:`renderspec` has the ability to insert versions from a given
+`global-requirements.txt` file. The file must contain lines following `PEP0508`_
+
+.. note:: For OpenStack, the `global-requirements.txt`_ can be used.
+
+To render a `example.spec.j2` file with a given requirements file, do::
+
+  renderspec --requirements global-requirements.txt example.spec.j2
+
+.. _PEP0508: https://www.python.org/dev/peps/pep-0508/
+.. _global-requirements.txt: https://git.openstack.org/cgit/openstack/requirements/tree/global-requirements.txt
+
 Template features
 =================
 
@@ -79,6 +95,11 @@ rendered on Fedora to::
 
   BuildRequires:  python-oslo-config >= 2:3.4.0
 
+It's also possible to skip adding required versions and handle that with a
+`global-requirements.txt` file. Given that this file contains `oslo.config>=4.3.0` and
+rendering with `--requirements`, the rendered spec would contain::
+
+  BuildRequires:  python-oslo-config >= 4.3.0
 
 context filter `license`
 ************************

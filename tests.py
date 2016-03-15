@@ -20,11 +20,15 @@ try:
 except ImportError:
     import unittest
 
+from ddt import data, ddt, unpack
+
 from jinja2 import Environment
 
 import renderspec
+import renderspec.versions
 
 
+@ddt
 class RenderspecContextFunctionTests(unittest.TestCase):
     """test functions which do some calculation based on the context"""
     def test_context_license_spdx(self):
@@ -39,112 +43,88 @@ class RenderspecContextFunctionTests(unittest.TestCase):
             'ASL 2.0'
         )
 
-    def test_context_py2pkg_pgkname_only(self):
+    @data(
+        # without version
+        ({'spec_style': 'suse', 'epochs': {}, 'requirements': {}},
+         'oslo.config', None, 'python-oslo.config'),
+        ({'spec_style': 'fedora', 'epochs': {}, 'requirements': {}},
+         'oslo.config', None, 'python-oslo-config'),
+        # with version
+        ({'spec_style': 'suse', 'epochs': {}, 'requirements': {}},
+         'oslo.config', ('>=', '1.2.3'), 'python-oslo.config >= 1.2.3'),
+        ({'spec_style': 'fedora', 'epochs': {}, 'requirements': {}},
+         'oslo.config', ('==', '1.2.3~a0'), 'python-oslo-config == 1.2.3~a0'),
+        # with version, with epoch
+        ({'spec_style': 'suse', 'epochs': {'oslo.config': 4},
+          'requirements': {}},
+         'oslo.config', ('>=', '1.2.3'), 'python-oslo.config >= 4:1.2.3'),
+        # without version, with epoch
+        ({'spec_style': 'suse', 'epochs': {'oslo.config': 4},
+          'requirements': {}},
+         'oslo.config', None, 'python-oslo.config'),
+        # with version, with requirements
+        ({'spec_style': 'suse', 'epochs': {},
+          'requirements': {'oslo.config' '1.2.3'}},
+         'oslo.config', ('>=', '4.5.6'), 'python-oslo.config >= 4.5.6'),
+        # without version, with requirements
+        ({'spec_style': 'suse', 'epochs': {},
+          'requirements': {'oslo.config': '1.2.3'}},
+         'oslo.config', None, 'python-oslo.config >= 1.2.3'),
+        # without version, with requirements, with epoch
+        ({'spec_style': 'suse', 'epochs': {'oslo.config': 4},
+          'requirements': {'oslo.config': '1.2.3'}},
+         'oslo.config', None, 'python-oslo.config >= 4:1.2.3'),
+        # with version, with requirements, with epoch
+        ({'spec_style': 'suse', 'epochs': {'oslo.config': 4},
+          'requirements': {'oslo.config' '1.2.3'}},
+         'oslo.config', ('>=', '4.5.6'), 'python-oslo.config >= 4:4.5.6'),
+    )
+    @unpack
+    def test_context_py2pkg(self, context, pkg_name, pkg_version,
+                            expected_result):
         self.assertEqual(
-            renderspec._context_py2pkg(
-                {'spec_style': 'suse', 'epochs': {}}, 'oslo.config'),
-            'python-oslo.config'
-        )
-        self.assertEqual(
-            renderspec._context_py2pkg(
-                {'spec_style': 'fedora', 'epochs': {}}, 'oslo.config'),
-            'python-oslo-config'
-        )
-
-    def test_context_py2pkg_pgkname_and_version(self):
-        self.assertEqual(
-            renderspec._context_py2pkg(
-                {'spec_style': 'suse', 'epochs': {}},
-                'oslo.config', ('>=', '1.2.3')),
-            'python-oslo.config >= 1.2.3'
-        )
-        self.assertEqual(
-            renderspec._context_py2pkg(
-                {'spec_style': 'fedora', 'epochs': {}},
-                'oslo.config', ('==', '1.2.3~a0')),
-            'python-oslo-config == 1.2.3~a0'
-        )
-
-    def test_context_py2pkg_pgkname_and_version_and_epoch(self):
-        self.assertEqual(
-            renderspec._context_py2pkg(
-                {'spec_style': 'suse', 'epochs': {'oslo.config': '4'}},
-                'oslo.config', ('>=', '1.2.3')),
-            'python-oslo.config >= 4:1.2.3'
-        )
-
-    def test_context_py2pkg_pgkname_and_epoch_no_version(self):
-        self.assertEqual(
-            renderspec._context_py2pkg(
-                {'spec_style': 'suse', 'epochs': {'oslo.config': '4'}},
-                'oslo.config'),
-            'python-oslo.config'
-        )
+            renderspec._context_py2pkg(context, pkg_name, pkg_version),
+            expected_result)
 
     def test_context_epoch_without_epochs(self):
         self.assertEqual(
             renderspec._context_epoch(
-                {'spec_style': 'suse', 'epochs': {}}, 'oslo.config'),
-            0
-        )
+                {'spec_style': 'suse', 'epochs': {}, 'requirements': {}},
+                'oslo.config'), 0)
 
     def test_context_epoch_with_epochs(self):
         self.assertEqual(
             renderspec._context_epoch(
-                {'spec_style': 'suse', 'epochs': {'oslo.config': 4}},
-                'oslo.config'),
-            4
-        )
+                {'spec_style': 'suse', 'epochs': {'oslo.config': 4},
+                 'requirements': {}}, 'oslo.config'), 4)
 
 
+@ddt
 class RenderspecTemplateFilterTests(unittest.TestCase):
     def setUp(self):
         """create a Jinja2 environment and register the standard filters"""
         self.env = Environment()
         renderspec._env_register_filters_and_globals(self.env)
 
-    def test_render_filter_py2pkg_oldstyle(self):
-        template = self.env.from_string("{{ 'requests' | py2pkg }} >= 2.8.1")
+    @data(
+        # old style
+        ({'spec_style': 'suse', 'epochs': {}, 'requirements': {}},
+         "{{ 'requests' | py2pkg }}", "python-requests"),
+        ({'spec_style': 'suse', 'epochs': {}, 'requirements': {}},
+         "{{ 'requests' | py2pkg }} >= 2.8.1", "python-requests >= 2.8.1"),
+        ({'spec_style': 'suse', 'epochs': {},
+          'requirements': {'requests': '1.2.3'}},
+         "{{ 'requests' | py2pkg }} >= 2.8.1", "python-requests >= 2.8.1"),
+    )
+    @unpack
+    def test_render_filter_py2pkg(self, context, string, expected_result):
+        template = self.env.from_string(string)
         self.assertEqual(
-            template.render(spec_style='suse', epochs={}),
-            'python-requests >= 2.8.1')
-
-    def test_render_filter_py2pkg(self):
-        template = self.env.from_string(
-            "{{ 'requests' | py2pkg }}")
-        self.assertEqual(
-            template.render(spec_style='suse', epochs={}),
-            'python-requests')
-
-    def test_render_filter_py2pkg_with_version(self):
-        template = self.env.from_string(
-            "{{ 'requests' | py2pkg(('>=', '2.8.1')) }}")
-        self.assertEqual(
-            template.render(spec_style='suse', epochs={}),
-            'python-requests >= 2.8.1')
-
-    def test_render_filter_py2pkg_with_version_and_epoch(self):
-        template = self.env.from_string(
-            "{{ 'requests' | py2pkg(('>=', '2.8.1')) }}")
-        self.assertEqual(
-            template.render(spec_style='suse', epochs={'requests': '1'}),
-            'python-requests >= 1:2.8.1')
-
-    def test_render_filter_epoch_without_epochs(self):
-        template = self.env.from_string(
-            "{{ 'requests' | epoch }}")
-        self.assertEqual(
-            template.render(spec_style='suse', epochs={}),
-            '0')
-
-    def test_render_filter_epoch_with_epochs(self):
-        template = self.env.from_string(
-            "{{ 'requests' | epoch }}")
-        self.assertEqual(
-            template.render(spec_style='suse', epochs={'requests': '1'}),
-            '1')
+            template.render(**context),
+            expected_result)
 
 
+@ddt
 class RenderspecTemplateFunctionTests(unittest.TestCase):
     def setUp(self):
         """create a Jinja2 environment and register the standard filters"""
@@ -155,43 +135,87 @@ class RenderspecTemplateFunctionTests(unittest.TestCase):
         template = self.env.from_string(
             "{{ license('Apache-2.0') }}")
         self.assertEqual(
-            template.render(spec_style='fedora', epochs={}),
+            template.render(spec_style='fedora', epochs={}, requirements={}),
             'ASL 2.0')
 
-    def test_render_func_py2pkg(self):
-        template = self.env.from_string(
-            "{{ py2pkg('requests') }}")
-        self.assertEqual(
-            template.render(spec_style='suse', epochs={}),
-            'python-requests')
+    @data(
+        # plain
+        ({'spec_style': 'suse', 'epochs': {}, 'requirements': {}},
+         "{{ py2pkg('requests') }}", "python-requests"),
+        # with version
+        ({'spec_style': 'suse', 'epochs': {}, 'requirements': {}},
+         "{{ py2pkg('requests', ('>=', '2.8.1')) }}",
+         "python-requests >= 2.8.1"),
+        # with version, with epoch
+        ({'spec_style': 'suse', 'epochs': {'requests': 4}, 'requirements': {}},
+         "{{ py2pkg('requests', ('>=', '2.8.1')) }}",
+         "python-requests >= 4:2.8.1"),
+        # with version, with epoch, with requirements
+        ({'spec_style': 'suse', 'epochs': {'requests': 4},
+          'requirements': {'requests': '1.2.3'}},
+         "{{ py2pkg('requests', ('>=', '2.8.1')) }}",
+         "python-requests >= 4:2.8.1"),
+        # without version, with epoch, with requirements
+        ({'spec_style': 'suse', 'epochs': {'requests': 4},
+          'requirements': {'requests': '1.2.3'}},
+         "{{ py2pkg('requests') }}",
+         "python-requests >= 4:1.2.3"),
 
-    def test_render_func_py2pkg_with_version(self):
-        template = self.env.from_string(
-            "{{ py2pkg('requests', ('>=', '2.8.1')) }}")
+    )
+    @unpack
+    def test_render_func_py2pkg(self, context, string, expected_result):
+        template = self.env.from_string(string)
         self.assertEqual(
-            template.render(spec_style='suse', epochs={}),
-            'python-requests >= 2.8.1')
-
-    def test_render_func_py2pkg_with_version_and_epoch(self):
-        template = self.env.from_string(
-            "{{ py2pkg('requests', ('>=', '2.8.1')) }}")
-        self.assertEqual(
-            template.render(spec_style='suse', epochs={'requests': '1'}),
-            'python-requests >= 1:2.8.1')
+            template.render(**context),
+            expected_result)
 
     def test_render_func_epoch_without_epochs(self):
         template = self.env.from_string(
             "Epoch: {{ epoch('requests') }}")
         self.assertEqual(
-            template.render(spec_style='suse', epochs={}),
+            template.render(spec_style='suse', epochs={}, requirements={}),
             'Epoch: 0')
 
     def test_render_func_epoch_with_epochs(self):
         template = self.env.from_string(
             "Epoch: {{ epoch('requests') }}")
         self.assertEqual(
-            template.render(spec_style='suse', epochs={'requests': 1}),
+            template.render(spec_style='suse', epochs={'requests': 1},
+                            requirements={}),
             'Epoch: 1')
+
+
+class RenderspecVersionsTests(unittest.TestCase):
+    def test_without_version(self):
+        requires = renderspec.versions.get_requirements(
+            ['# a comment', '', '   ', 'pyasn1  # BSD', 'Paste'])
+        self.assertEqual(requires, {})
+
+    def test_with_single_version(self):
+        requires = renderspec.versions.get_requirements(
+            ['paramiko>=1.16.0  # LGPL'])
+        self.assertEqual(requires, {'paramiko': '1.16.0'})
+
+    def test_with_multiple_versions(self):
+        requires = renderspec.versions.get_requirements(
+            ['sphinx>=1.1.2,!=1.2.0,!=1.3b1,<1.3  # BSD'])
+        self.assertEqual(requires, {'sphinx': '1.1.2'})
+
+    def test_with_multiple_versions_and_invalid_lowest(self):
+        requires = renderspec.versions.get_requirements(
+            ['sphinx>=1.1.2,!=1.1.0,!=1.3b1,<1.3  # BSD'])
+        self.assertEqual(requires, {'sphinx': '1.1.2'})
+
+    def test_with_single_marker(self):
+        requires = renderspec.versions.get_requirements(
+            ["pywin32>=1.0;sys_platform=='win32'  # PSF"])
+        self.assertEqual(requires, {})
+
+    def test_with_multiple_markers(self):
+        requires = renderspec.versions.get_requirements(
+            ["""pyinotify>=0.9.6;sys_platform!='win32' and \
+            sys_platform!='darwin' and sys_platform!='sunos5' # MIT"""])
+        self.assertEqual(requires, {'pyinotify': '0.9.6'})
 
 
 if __name__ == '__main__':

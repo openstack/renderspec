@@ -37,6 +37,10 @@ def _context_epoch(context, pkg_name):
     return context['epochs'].get(pkg_name, 0)
 
 
+def _context_py2name(context, pkg_name):
+    return pymod2pkg.module2package(pkg_name, context['spec_style'])
+
+
 def _context_py2pkg(context, pkg_name, pkg_version=None):
     """generate a distro specific package name with optional version tuple."""
     # package name handling
@@ -126,11 +130,17 @@ def _globals_license_spdx(context, value):
     return _context_license_spdx(context, value)
 
 
+@contextfunction
+def _globals_py2name(context, value):
+    return _context_py2name(context, value)
+
+
 def _env_register_filters_and_globals(env):
     """register all the jinja2 filters we want in the environment"""
     env.filters['license'] = _filter_license_spdx
     env.filters['epoch'] = _filter_epoch
     env.globals['py2pkg'] = _globals_py2pkg
+    env.globals['py2name'] = _globals_py2name
     env.globals['epoch'] = _globals_epoch
     env.globals['license'] = _globals_license_spdx
 

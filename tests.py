@@ -135,7 +135,6 @@ class RenderspecTemplateFunctionTests(unittest.TestCase):
           'requirements': {'requests': '1.2.3'}},
          "{{ py2pkg('requests') }}",
          "python-requests >= 4:1.2.3"),
-
     )
     @unpack
     def test_render_func_py2pkg(self, context, string, expected_result):
@@ -158,6 +157,29 @@ class RenderspecTemplateFunctionTests(unittest.TestCase):
             template.render(spec_style='suse', epochs={'requests': 1},
                             requirements={}),
             'Epoch: 1')
+
+    @data(
+        # plain name
+        ({'spec_style': 'suse', 'epochs': {}, 'requirements': {}},
+         "{{ py2name('requests') }}",
+         "python-requests"),
+        # name with epoch
+        ({'spec_style': 'suse', 'epochs': {'requests': 4}, 'requirements': {}},
+         "{{ py2name('requests') }}",
+         "python-requests"),
+        # name with epoch, with requirements
+        ({'spec_style': 'suse', 'epochs': {'requests': 4},
+          'requirements': {'requests': '1.4.0'}},
+         "{{ py2name('requests') }}",
+         "python-requests"),
+    )
+    @unpack
+    def test_render_func_py2name(self, context, string, expected_result):
+        """test the template context function called 'py2name()'"""
+        template = self.env.from_string(string)
+        self.assertEqual(
+            template.render(**context),
+            expected_result)
 
 
 class RenderspecVersionsTests(unittest.TestCase):

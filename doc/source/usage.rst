@@ -75,15 +75,29 @@ Templates are just plain `Jinja2`_ templates. So all magic (i.e. filters) from
 Jinja can be used in the templates. Beside the Jinja provided features, there are
 some extra features renderspec adds to the template context.
 
+context function `py2name`
+***********************
+`py2name` is used to translate a given pypi name to a package name following the
+different distribution specific guidelines.
+
+.. note:: For translating pypi names (the name a python package has on `pypi.python.org`_
+          to distro specific names, internally a module called `pymod2pkg`_ is used.
+
+For example, to define a package name and use the `py2name` context function, do::
+
+  Name: {{ py2name('oslo.config') }}
+
+Rendering this template :program:`renderspec` with the `suse` style would result in::
+
+  Name: python-oslo.config
+
+
 context function `py2pkg`
 *************************
 `py2pkg` is used to
 
 * translate the given pypi name to a distro specific name
 * handle epochs and version
-
-.. note:: For translating pypi names (the name a python package has on `pypi.python.org`_
-          to distro specific names, internally a module called `pymod2pkg`_ is used.
 
 For example, a BuildRequires in a spec.j2 template for the package `oslo.config` in
 version `>= 3.4.0` would be defined as::

@@ -190,12 +190,14 @@ def _get_epochs(filename):
     return {}
 
 
-def _get_requirements(filename):
+def _get_requirements(filenames):
     """get a dictionary with pkg-name->min-version mapping"""
-    if os.path.exists(filename):
-        with open(filename, 'r') as f:
-            return versions.get_requirements(f.readlines())
-    return {}
+    reqs = {}
+    for filename in filenames:
+        if os.path.exists(filename):
+            with open(filename, 'r') as f:
+                reqs.update(versions.get_requirements(f.readlines()))
+    return reqs
 
 
 def process_args():
@@ -214,10 +216,10 @@ def process_args():
     parser.add_argument("input-template", nargs='?',
                         help="specfile jinja2 template to render. "
                         "default: *.spec.j2")
-    parser.add_argument("--requirements", help="file which contains "
-                        "PEP0508 compatible requirement lines."
-                        "default: global-requirements.txt",
-                        default="global-requirements.txt")
+    parser.add_argument("--requirements", help="file(s) which contain "
+                        "PEP0508 compatible requirement lines. Last mentioned "
+                        "file has highest priority. default: %(default)s",
+                        nargs='*', default="global-requirements.txt")
 
     return vars(parser.parse_args())
 

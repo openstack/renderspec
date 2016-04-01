@@ -24,8 +24,11 @@ from ddt import data, ddt, unpack
 
 from jinja2 import Environment
 
+import os
 import renderspec
 import renderspec.versions
+import shutil
+import tempfile
 
 
 @ddt
@@ -213,6 +216,36 @@ class RenderspecVersionsTests(unittest.TestCase):
             ["""pyinotify>=0.9.6;sys_platform!='win32' and \
             sys_platform!='darwin' and sys_platform!='sunos5' # MIT"""])
         self.assertEqual(requires, {'pyinotify': '0.9.6'})
+
+
+class RenderspecCommonTests(unittest.TestCase):
+    def test__get_requirements_single_file(self):
+        tmpdir = tempfile.mkdtemp(prefix='renderspec-test_')
+        try:
+            f1 = os.path.join(tmpdir, 'f1')
+            with open(f1, 'w+') as f:
+                f.write('paramiko>=1.16.0\n'
+                        'pyinotify>=0.9.6')
+            self.assertDictEqual(
+                renderspec._get_requirements([f1]),
+                {'paramiko': '1.16.0', 'pyinotify': '0.9.6'})
+        finally:
+            shutil.rmtree(tmpdir)
+
+    def test__get_requirements_multiple_files(self):
+        tmpdir = tempfile.mkdtemp(prefix='renderspec-test_')
+        try:
+            f1 = os.path.join(tmpdir, 'f1')
+            f2 = os.path.join(tmpdir, 'f2')
+            with open(f1, 'w+') as f:
+                f.write('paramiko>=1.17.0  # LGPL')
+            with open(f2, 'w+') as f:
+                f.write('paramiko>=1.16.0  # LGPL')
+            # we expect the second file was used (because mentioned last)
+            self.assertEqual(renderspec._get_requirements([f1, f2]),
+                             {'paramiko': '1.16.0'})
+        finally:
+            shutil.rmtree(tmpdir)
 
 
 if __name__ == '__main__':

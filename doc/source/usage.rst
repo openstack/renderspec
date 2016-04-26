@@ -69,8 +69,9 @@ It's also possible to use multiple requirements file. The last mentioned file
 has the highest priority in case both files contain requirements for the same
 package name. Using multiple files looks like this::
 
-  renderspec --requirements global-requirements.txt custom-requirements.txt \
-  example.spec.j2
+  renderspec --requirements global-requirements.txt \
+      --requirements custom-requirements.txt \
+      example.spec.j2
 
 .. _PEP0508: https://www.python.org/dev/peps/pep-0508/
 .. _global-requirements.txt: https://git.openstack.org/cgit/openstack/requirements/tree/global-requirements.txt

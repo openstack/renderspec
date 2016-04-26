@@ -219,7 +219,7 @@ def process_args():
     parser.add_argument("--requirements", help="file(s) which contain "
                         "PEP0508 compatible requirement lines. Last mentioned "
                         "file has highest priority. default: %(default)s",
-                        nargs='*', default="global-requirements.txt")
+                        action='append', default=[])
 
     return vars(parser.parse_args())
 

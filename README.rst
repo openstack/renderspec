@@ -5,6 +5,10 @@ renderspec is a tool to convert a .spec.j2 Jinja2 template to
 a rpm .spec file which is usable for different distributions
 and follow their policies and processes.
 
+Documentation for renderspec can be found at
+
+   http://docs.openstack.org/developer/renderspec/
+
 For more information about the OpenStack rpm packaging initiative, please
 follow the link to the wiki page:
 

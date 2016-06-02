@@ -148,8 +148,7 @@ def _env_register_filters_and_globals(env):
 def generate_spec(spec_style, epochs, requirements, input_template_path):
     """generate a spec file with the given style and the given template"""
     env = Environment(loader=FileSystemLoader(
-        os.path.dirname(input_template_path)),
-        autoescape=True)
+        os.path.dirname(input_template_path)))
 
     _env_register_filters_and_globals(env)
 

@@ -218,6 +218,7 @@ class RenderspecVersionsTests(unittest.TestCase):
         self.assertEqual(requires, {'pyinotify': '0.9.6'})
 
 
+@ddt
 class RenderspecCommonTests(unittest.TestCase):
     def test__get_requirements_single_file(self):
         tmpdir = tempfile.mkdtemp(prefix='renderspec-test_')
@@ -247,6 +248,25 @@ class RenderspecCommonTests(unittest.TestCase):
         finally:
             shutil.rmtree(tmpdir)
 
+    @data(
+        ("{{ py2pkg('requests') }}", "suse", {}, {}, "python-requests"),
+        ("{{ py2pkg('requests') }}", "fedora", {}, {}, "python-requests"),
+        ("{{ py2pkg('requests') }}", "suse", {}, {"requests": '1.1.0'},
+         "python-requests >= 1.1.0"),
+    )
+    @unpack
+    def test_generate_spec(self, template, style, epochs, requirements,
+                           expected_result):
+        tmpdir = tempfile.mkdtemp(prefix='renderspec-test_')
+        try:
+            f1 = os.path.join(tmpdir, 'test.spec')
+            with open(f1, 'w+') as f:
+                f.write(template)
+            rendered = renderspec.generate_spec(
+                style, epochs, requirements, f1)
+            self.assertEqual(rendered, expected_result)
+        finally:
+            shutil.rmtree(tmpdir)
 
 if __name__ == '__main__':
     unittest.main()

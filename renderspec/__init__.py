@@ -148,7 +148,8 @@ def _env_register_filters_and_globals(env):
 def generate_spec(spec_style, epochs, requirements, input_template_path):
     """generate a spec file with the given style and the given template"""
     env = Environment(loader=FileSystemLoader(
-        os.path.dirname(input_template_path)))
+        os.path.dirname(input_template_path)),
+        autoescape=True)
 
     _env_register_filters_and_globals(env)
 
@@ -185,7 +186,7 @@ def _get_epochs(filename):
     """get a dictionary with pkg-name->epoch mapping"""
     if os.path.exists(filename):
         with open(filename, 'r') as f:
-            data = yaml.load(f.read())
+            data = yaml.safe_load(f.read())
             return dict(data['epochs'])
     return {}
 

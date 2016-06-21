@@ -157,11 +157,20 @@ def generate_spec(spec_style, epochs, requirements, input_template_path):
                            requirements=requirements)
 
 
+def _is_fedora(distname):
+    """detect Fedora-based distro (e.g Fedora, CentOS, RHEL)"""
+    distname = distname.lower()
+    for x in ["fedora", "centos", "red hat"]:
+        if x in distname:
+            return True
+    return False
+
+
 def _get_default_distro():
     distname, version, id_ = platform.linux_distribution()
     if "suse" in distname.lower():
         return "suse"
-    elif "fedora" in distname.lower():
+    elif _is_fedora(distname):
         return "fedora"
     else:
         return "unknown"

@@ -183,20 +183,20 @@ def _get_default_template():
 
 def _get_epochs(filename):
     """get a dictionary with pkg-name->epoch mapping"""
-    if os.path.exists(filename):
+    epochs = {}
+    if filename is not None:
         with open(filename, 'r') as f:
             data = yaml.safe_load(f.read())
-            return dict(data['epochs'])
-    return {}
+            epochs.update(data['epochs'])
+    return epochs
 
 
 def _get_requirements(filenames):
     """get a dictionary with pkg-name->min-version mapping"""
     reqs = {}
     for filename in filenames:
-        if os.path.exists(filename):
-            with open(filename, 'r') as f:
-                reqs.update(versions.get_requirements(f.readlines()))
+        with open(filename, 'r') as f:
+            reqs.update(versions.get_requirements(f.readlines()))
     return reqs
 
 
@@ -210,9 +210,7 @@ def process_args():
     parser.add_argument("--spec-style", help="distro style you want to use. "
                         "default: %s" % (distro), default=distro,
                         choices=['suse', 'fedora'])
-    parser.add_argument("--epochs", help="yaml file with epochs listed. "
-                        "default: %s-epochs.yaml" % (distro),
-                        default="%s-epochs.yaml" % distro)
+    parser.add_argument("--epochs", help="yaml file with epochs listed.")
     parser.add_argument("input-template", nargs='?',
                         help="specfile jinja2 template to render. "
                         "default: *.spec.j2")
@@ -242,8 +240,12 @@ def main():
             return 2
         output_fn, _, _ = input_template.rpartition('.')
 
-    epochs = _get_epochs(args['epochs'])
-    requirements = _get_requirements(args['requirements'])
+    try:
+        epochs = _get_epochs(args['epochs'])
+        requirements = _get_requirements(args['requirements'])
+    except IOError as e:
+        print(e)
+        return 3
     spec = generate_spec(args['spec_style'], epochs, requirements,
                          input_template)
     if output_fn and output_fn != '-':

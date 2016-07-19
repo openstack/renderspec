@@ -24,6 +24,7 @@ from ddt import data, ddt, unpack
 
 from jinja2 import Environment
 
+from mock import Mock
 import os
 import renderspec
 import renderspec.versions
@@ -267,6 +268,34 @@ class RenderspecCommonTests(unittest.TestCase):
             self.assertEqual(rendered, expected_result)
         finally:
             shutil.rmtree(tmpdir)
+
+
+class RenderspecDistroDetection(unittest.TestCase):
+    def test_is_fedora(self):
+        self.assertTrue(renderspec._is_fedora("CentOS Linux"))
+        self.assertTrue(renderspec._is_fedora("Fedora"))
+        self.assertTrue(renderspec._is_fedora("Red Hat Enterprise Linux 7.2"))
+        self.assertFalse(renderspec._is_fedora("SUSE Linux Enterprise Server"))
+
+    def test_get_default_distro(self):
+        import platform
+        platform.linux_distribution = Mock(
+            return_value=('SUSE Linux Enterprise Server ', '12', 'x86_64'))
+        self.assertEqual(renderspec._get_default_distro(),
+                         "suse")
+        platform.linux_distribution = Mock(
+            return_value=('Fedora', '24', 'x86_64'))
+        self.assertEqual(renderspec._get_default_distro(), "fedora")
+        platform.linux_distribution = Mock(
+            return_value=('Red Hat Enterprise Linux Server', '7.3', 'x86_64'))
+        self.assertEqual(renderspec._get_default_distro(), "fedora")
+        platform.linux_distribution = Mock(
+            return_value=('CentOS Linux', '7.3', 'x86_64'))
+        self.assertEqual(renderspec._get_default_distro(), "fedora")
+        platform.linux_distribution = Mock(
+            return_value=('debian', '7.0', 'x86_64'))
+        self.assertEqual(renderspec._get_default_distro(), "unknown")
+
 
 if __name__ == '__main__':
     unittest.main()

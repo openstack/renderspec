@@ -163,6 +163,37 @@ With the `suse` spec-style::
 
   License: Apache-2.0
 
+
+distribution specific blocks & child templates
+**********************************************
+
+To properly handle differences between individual .spec styles, renderspec
+contains child templates in `renderspec/dist-templates` which are
+automatically used with corresponding `--spec-style`. These allow different
+output for each spec style (distro) using jinja `{% block %}` syntax.
+
+For example consider simple `renderspec/dist-templates/fedora.spec.j2`:
+
+  {% extends ".spec" %}
+  {% block build_requires %}
+  BuildRequires:  {{ py2pkg('setuptools') }}
+  {% endblock %}
+
+allows following in a spec template:
+
+  {% block build_requires %}{% endblock %}
+
+to render into
+
+  BuildRequires:  python-setuptools
+
+with `fedora` spec style, while `renderspec/dist-templates/suse.spec.j2` might
+define other result for `suse` spec style.
+
+For more information, see current `renderspec/dist-templates` and usage in
+`openstack/rpm-packaging`_ project.
+
+
 .. _Jinja2: http://jinja.pocoo.org/docs/dev/
 .. _openstack/rpm-packaging: https://git.openstack.org/cgit/openstack/rpm-packaging/
 .. _pymod2pkg: https://git.openstack.org/cgit/openstack/pymod2pkg

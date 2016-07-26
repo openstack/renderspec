@@ -24,7 +24,7 @@ from ddt import data, ddt, unpack
 
 from jinja2 import Environment
 
-from mock import Mock
+from mock import Mock, patch
 import os
 import renderspec
 import renderspec.versions
@@ -295,6 +295,42 @@ class RenderspecDistroDetection(unittest.TestCase):
         platform.linux_distribution = Mock(
             return_value=('debian', '7.0', 'x86_64'))
         self.assertEqual(renderspec._get_default_distro(), "unknown")
+
+
+class RenderspecDistTeamplatesTests(unittest.TestCase):
+    @patch('renderspec.distloader.get_dist_templates_path')
+    def test_dist_templates(self, mock_dt_path):
+        base_txt = ('Line before block\n'
+                    '{% block footest %}{% endblock %}\n'
+                    'Line after block\n')
+        dt_txt = ('{% extends ".spec" %}'
+                  '{% block footest %}'
+                  'foo block\n'
+                  'macro: {{ py2pkg("test") }}\n'
+                  '{% endblock %}')
+        expected_out = ('Line before block\n'
+                        'foo block\n'
+                        'macro: python-test\n'
+                        'Line after block')
+        tmpdir = tempfile.mkdtemp(prefix='renderspec-test_')
+        try:
+            # create .spec template
+            base_path = os.path.join(tmpdir, 'foo.spec.j2')
+            with open(base_path, 'w+') as f:
+                f.write(base_txt)
+            # create custom dist template
+            dt_dir = os.path.join(tmpdir, 'dist-templates')
+            os.mkdir(dt_dir)
+            dt_path = os.path.join(dt_dir, 'loldistro.spec.j2')
+            with open(dt_path, 'w+') as f:
+                f.write(dt_txt)
+            # mock this to use testing dist-tempaltes folder
+            mock_dt_path.return_value = dt_dir
+
+            out = renderspec.generate_spec('loldistro', {}, {}, base_path)
+            self.assertEqual(out, expected_out)
+        finally:
+            shutil.rmtree(tmpdir)
 
 
 if __name__ == '__main__':

@@ -24,11 +24,11 @@ import sys
 from jinja2 import contextfilter
 from jinja2 import contextfunction
 from jinja2 import Environment
-from jinja2 import FileSystemLoader
 import pymod2pkg
 
 import yaml
 
+from renderspec.distloader import RenderspecLoader
 from renderspec import versions
 
 
@@ -147,12 +147,17 @@ def _env_register_filters_and_globals(env):
 
 def generate_spec(spec_style, epochs, requirements, input_template_path):
     """generate a spec file with the given style and the given template"""
-    env = Environment(loader=FileSystemLoader(
-        os.path.dirname(input_template_path)))
+
+    env = Environment(loader=RenderspecLoader(
+        template_fn=input_template_path),
+        trim_blocks=True)
 
     _env_register_filters_and_globals(env)
 
-    template = env.get_template(os.path.basename(input_template_path))
+    template_name = '.spec'
+    if spec_style in env.loader.list_templates():
+        template_name = spec_style
+    template = env.get_template(template_name)
     return template.render(spec_style=spec_style, epochs=epochs,
                            requirements=requirements)
 

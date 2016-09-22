@@ -2,3 +2,7 @@
 {% block build_requires %}
 BuildRequires:  {{ py2pkg('setuptools') }}
 {% endblock %}
+{% block req_cleanup %}
+# RDO prefers RPM to handle dependencies itself
+rm -rf *requirements.txt
+{% endblock %}

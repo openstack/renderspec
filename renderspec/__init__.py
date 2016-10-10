@@ -24,12 +24,74 @@ import sys
 from jinja2 import contextfilter
 from jinja2 import contextfunction
 from jinja2 import Environment
+from jinja2.exceptions import TemplateRuntimeError
+from packaging.version import parse
 import pymod2pkg
 
 import yaml
 
 from renderspec.distloader import RenderspecLoader
 from renderspec import versions
+
+
+# a variable that needs to be set for some functions in the context
+CONTEXT_VAR_UPSTREAM_VERSION = "upstream_version"
+CONTEXT_VAR_RPM_RELEASE = "rpm_release"
+
+
+def _context_check_variable(context, var_name, needed_by):
+    """check that the context has a given variable"""
+    if var_name not in context.vars:
+        raise TemplateRuntimeError("Variable '%s' not available in context but"
+                                   " needed for '%s'" % (var_name, needed_by))
+
+
+def _context_py2rpmversion(context):
+    """get a python PEP0440 compatible version and translate it to an RPM
+    version"""
+    # the context needs a variable set via {% set upstream_version = 'ver' %}
+    _context_check_variable(context, CONTEXT_VAR_UPSTREAM_VERSION,
+                            'py2rpmversion')
+    version = context.vars[CONTEXT_VAR_UPSTREAM_VERSION]
+    v_python = parse(version)
+    # fedora does not allow '~' in versions but uses a combination of Version
+    # and Release
+    # https://fedoraproject.org/wiki/Packaging:Versioning\#Pre-Release_packages
+    if context['spec_style'] == 'fedora':
+        return v_python.base_version
+    else:
+        v_rpm = v_python.public
+        if v_python.is_prerelease:
+            # we need to add the 'x' in front of alpha/beta releases because
+            # in the python world, "1.1a10" > "1.1.dev10"
+            # but in the rpm world, "1.1~a10" < "1.1~dev10"
+            v_rpm = v_rpm.replace('a', '~xalpha')
+            v_rpm = v_rpm.replace('b', '~xbeta')
+            v_rpm = v_rpm.replace('rc', '~rc')
+            v_rpm = v_rpm.replace('.dev', '~dev')
+        return v_rpm
+
+
+def _context_py2rpmrelease(context):
+    if context['spec_style'] == 'fedora':
+        # the context needs a var set via {% set upstream_version = 'ver' %}
+        _context_check_variable(context, CONTEXT_VAR_UPSTREAM_VERSION,
+                                'py2rpmrelease')
+        # the context needs a var set via {% set rpm_release = 'ver' %}
+        _context_check_variable(context, CONTEXT_VAR_RPM_RELEASE,
+                                'py2rpmrelease')
+        upstream_version = context.vars[CONTEXT_VAR_UPSTREAM_VERSION]
+        rpm_release = context.vars[CONTEXT_VAR_RPM_RELEASE]
+        v_python = parse(upstream_version)
+        if v_python.is_prerelease:
+            _, alphatag = v_python.public.split(v_python.base_version)
+            return '0.{}.{}%{{?dist}}'.format(rpm_release,
+                                              alphatag.lstrip('.'))
+        else:
+            return '{}%{{?dist}}'.format(rpm_release)
+    else:
+        # SUSE uses just '0'. The OpenBuildService handles the Release tag
+        return '0'
 
 
 def _context_epoch(context, pkg_name):
@@ -121,6 +183,16 @@ def _globals_py2pkg(context, pkg_name, pkg_version=None):
 
 
 @contextfunction
+def _globals_py2rpmversion(context):
+    return _context_py2rpmversion(context)
+
+
+@contextfunction
+def _globals_py2rpmrelease(context):
+    return _context_py2rpmrelease(context)
+
+
+@contextfunction
 def _globals_epoch(context, value):
     return _context_epoch(context, value)
 
@@ -139,6 +211,8 @@ def _env_register_filters_and_globals(env):
     """register all the jinja2 filters we want in the environment"""
     env.filters['license'] = _filter_license_spdx
     env.filters['epoch'] = _filter_epoch
+    env.globals['py2rpmversion'] = _globals_py2rpmversion
+    env.globals['py2rpmrelease'] = _globals_py2rpmrelease
     env.globals['py2pkg'] = _globals_py2pkg
     env.globals['py2name'] = _globals_py2name
     env.globals['epoch'] = _globals_epoch

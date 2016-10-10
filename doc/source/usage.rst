@@ -76,6 +76,57 @@ package name. Using multiple files looks like this::
 .. _PEP0508: https://www.python.org/dev/peps/pep-0508/
 .. _global-requirements.txt: https://git.openstack.org/cgit/openstack/requirements/tree/global-requirements.txt
 
+Handling the package version
+****************************
+
+Distributions handle versions, especially pre-release versions differently.
+SUSE for example allows using RPM's tilde ('~) while Fedora doesn't allow that
+and uses a combination of RPM `Version` and `Release` tag to express pre-releases.
+To support both styles with renderspec, the upstream version and a release
+must be available in the context::
+
+  {% set upstream_version = '1.2.3.0rc1' %}
+  {% set rpm_release = '1' %}
+
+This should be done on the first lines in the spec.j2 template. The `rpm_release` is
+only used in the fedora style.
+Then for the RPM version and release, use::
+
+  Version: {{ py2rpmversion() }}
+  Release: {{ py2rpmrelease() }}
+
+For suse-style, this renders to::
+
+  Version: 1.2.3.0~rc1
+  Release: 0
+
+For fedora-style, this renders to::
+
+  Version: 1.2.3
+  Release: 0.1.0rc1%{?dist}
+
+Note that in case of pre-releases you may need to adjust the version that is used
+in the `Source` tag and the `%prep` sections `%setup`. So use e.g. ::
+
+  {% set upstream_version = '1.2.3.0rc1' %}
+  {% set rpm_release = '1' %}
+  %name oslo.config
+  Version: {{ py2rpmversion() }}
+  Release: {{ py2rpmrelease() }}
+  Source0: https://pypi.io/packages/source/o/%{sname}/%{sname}-{{ upstream_version }}.tar.gz
+  %prep
+  %setup -q -n %{sname}-{{upstream_version}}
+
+which would render (with suse-style) to::
+
+  %name oslo.config
+  Version: 1.2.3.0~rc1
+  Release: 0
+  Source0: https://pypi.io/packages/source/o/%{sname}/%{sname}-1.2.3rc1.tar.gz
+  %prep
+  %setup -q -n %{sname}-1.2.3.0rc1
+
+
 Template features
 =================
 
@@ -164,6 +215,47 @@ With the `suse` spec-style::
   License: Apache-2.0
 
 
+context function `py2rpmversion`
+********************************
+Python has a semantic version schema (see `PEP0440`_) and converting Python versions
+to RPM compatible versions is needed in some cases. For example, in the Python world
+the version "1.1.0a3" is lower than "1.1.0" but for RPM the version is higher.
+To transform a Python version to a RPM compatible version, use::
+
+  {% set upstream_version = '1.1.0a3' %}
+  {% set rpm_release = '1' %}
+
+  Version: {{ py2rpmversion() }}
+
+With the `suse` spec-style it will be translated to::
+
+  Version: 1.1.0~xalpha3
+
+Note that you need to set 2 context variables (`upstream_version` and `rpm_release`)
+to be able to use the `py2rpmversion()` function.
+
+
+context function `py2rpmrelease`
+********************************
+Fedora doesn't allow the usage of `~` (tilde) in the `Version` tag. So for pre-releases
+the `Release` tag is used (see `Fedora Packaging Versioning`_)
+For the fedora-style::
+
+  {% set upstream_version = '1.1.0a3' %}
+  {% set rpm_release = '1' %}
+
+  Version: {{ py2rpmversion() }}
+  Release: {{ py2rpmrelease() }}
+
+this would render to::
+
+  Version: 1.1.0
+  Release: 0.1a3%{?dist}
+
+Note that you need to set 2 context variables (`upstream_version` and `rpm_release`)
+to be able to use the `py2rpmrelease()` function.
+
+
 distribution specific blocks & child templates
 **********************************************
 
@@ -199,3 +291,5 @@ For more information, see current `renderspec/dist-templates` and usage in
 .. _pymod2pkg: https://git.openstack.org/cgit/openstack/pymod2pkg
 .. _pypi.python.org: https://pypi.python.org/pypi
 .. _SPDX: https://spdx.org/licenses/
+.. _PEP0440: https://www.python.org/dev/peps/pep-0440/
+.. _Fedora Packaging Versioning: https://fedoraproject.org/wiki/Packaging:Versioning#Pre-Release_packages

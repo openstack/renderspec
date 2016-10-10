@@ -103,11 +103,6 @@ def _context_license_spdx(context, value):
 # jinja2 filter
 ###############
 @contextfilter
-def _filter_license_spdx(context, value):
-    return _context_license_spdx(context, value)
-
-
-@contextfilter
 def _filter_epoch(context, value):
     return _context_epoch(context, value)
 
@@ -137,7 +132,6 @@ def _globals_py2name(context, value):
 
 def _env_register_filters_and_globals(env):
     """register all the jinja2 filters we want in the environment"""
-    env.filters['license'] = _filter_license_spdx
     env.filters['epoch'] = _filter_epoch
     env.globals['py2pkg'] = _globals_py2pkg
     env.globals['py2name'] = _globals_py2name

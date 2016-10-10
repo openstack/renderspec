@@ -148,12 +148,12 @@ With an existing yaml (and `oslo.config` epoch set to 2), this would be rendered
   Epoch: 2
 
 
-context filter `license`
+context function `license`
 ************************
 The templates use `SPDX`_ license names and theses names are translated for different distros.
 For example, a project uses the `Apache-2.0` license::
 
-  License: {{ 'Apache-2.0' | license }}
+  License: {{ license('Apache-2.0') }}
 
 With the `fedora` spec-style, this would be rendered to::
 

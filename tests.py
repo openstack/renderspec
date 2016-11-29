@@ -185,6 +185,56 @@ class RenderspecTemplateFunctionTests(unittest.TestCase):
             template.render(**context),
             expected_result)
 
+    @data(
+        ('suse', '1.1.0', '1.1.0'),
+        ('suse', '1.1.0.post2', '1.1.0.post2'),
+        ('suse', '1.1.0dev10', '1.1.0~dev10'),
+        ('suse', '1.1.0a10', '1.1.0~xalpha10'),
+        ('suse', '1.1.0a10dev5', '1.1.0~xalpha10~dev5'),
+        ('suse', '1.1.0b10', '1.1.0~xbeta10'),
+        ('suse', '1.1.0rc2', '1.1.0~rc2'),
+        ('suse', '1.1.0rc2dev2', '1.1.0~rc2~dev2'),
+        ('fedora', '1.1.0', '1.1.0'),
+        ('fedora', '1.1.0b10', '1.1.0'),
+        ('fedora', '1.1.0rc2dev2', '1.1.0'),
+    )
+    @unpack
+    def test_render_func_py2rpmversion(self, style, py_ver, rpm_ver):
+        context = {'spec_style': style, 'epochs': {}, 'requirements': {}}
+        # need to escape '{' and '}' here
+        s = "{{% set upstream_version = '{}' %}}{{{{ py2rpmversion() }}}}"\
+            .format(py_ver)
+        template = self.env.from_string(s)
+        self.assertEqual(
+            template.render(**context),
+            rpm_ver)
+
+    @data(
+        ('suse', '1.1.0', '1', '0'),
+        ('suse', '1.1.0.post2', '1', '0'),
+        ('suse', '1.1.0dev10', '2', '0'),
+        ('fedora', '1.1.0', '1', '1%{?dist}'),
+        # ('fedora', '1.1.0.post2', '1', 'FIXME'),
+        ('fedora', '1.1.0dev10', '1', '0.1.dev10%{?dist}'),
+        ('fedora', '1.1.0a10', '1', '0.1.a10%{?dist}'),
+        ('fedora', '1.1.0a10dev5', '1', '0.1.a10.dev5%{?dist}'),
+        ('fedora', '1.1.0b10', '1', '0.1.b10%{?dist}'),
+        ('fedora', '1.1.0rc2', '5', '0.5.rc2%{?dist}'),
+        ('fedora', '1.1.0rc2dev2', '1', '0.1.rc2.dev2%{?dist}'),
+    )
+    @unpack
+    def test_render_func_py2rpmrelease(self, style, upstream_ver, rpm_release,
+                                       rpm_release_expected):
+        context = {'spec_style': style, 'epochs': {}, 'requirements': {}}
+        # need to escape '{' and '}' here
+        s = "{{% set upstream_version = '{}' %}}" \
+            "{{% set rpm_release = '{}' %}}" \
+            "{{{{ py2rpmrelease() }}}}".format(upstream_ver, rpm_release)
+        template = self.env.from_string(s)
+        self.assertEqual(
+            template.render(**context),
+            rpm_release_expected)
+
 
 class RenderspecVersionsTests(unittest.TestCase):
     def test_without_version(self):

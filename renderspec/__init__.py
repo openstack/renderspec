@@ -58,7 +58,10 @@ def _context_py2rpmversion(context):
     # and Release
     # https://fedoraproject.org/wiki/Packaging:Versioning\#Pre-Release_packages
     if context['spec_style'] == 'fedora':
-        return v_python.base_version
+        if len(v_python._version.release) >= 4:
+            return "%d.%d.%d" % (v_python._version.release[0:3])
+        else:
+            return v_python.base_version
     else:
         v_rpm = v_python.public
         if v_python.is_prerelease:

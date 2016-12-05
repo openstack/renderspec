@@ -197,6 +197,7 @@ class RenderspecTemplateFunctionTests(unittest.TestCase):
         ('fedora', '1.1.0', '1.1.0'),
         ('fedora', '1.1.0b10', '1.1.0'),
         ('fedora', '1.1.0rc2dev2', '1.1.0'),
+        ('fedora', '11.0.0.0b1', '11.0.0'),
     )
     @unpack
     def test_render_func_py2rpmversion(self, style, py_ver, rpm_ver):
@@ -221,6 +222,7 @@ class RenderspecTemplateFunctionTests(unittest.TestCase):
         ('fedora', '1.1.0b10', '1', '0.1.b10%{?dist}'),
         ('fedora', '1.1.0rc2', '5', '0.5.rc2%{?dist}'),
         ('fedora', '1.1.0rc2dev2', '1', '0.1.rc2.dev2%{?dist}'),
+        ('fedora', '11.0.0.0b1', '1', '0.1.b1%{?dist}'),
     )
     @unpack
     def test_render_func_py2rpmrelease(self, style, upstream_ver, rpm_release,

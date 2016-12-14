@@ -151,6 +151,7 @@ def _context_license_spdx(context, value):
         "MPL-1.0": "MPLv1.0",
         "MPL-1.1": "MPLv1.1",
         "MPL-2.0": "MPLv2.0",
+        "OFL-1.1": "OFL",
         "Python-2.0": "Python",
     }
 

@@ -278,7 +278,7 @@ class RenderspecCommonTests(unittest.TestCase):
             with open(f1, 'w+') as f:
                 f.write('paramiko>=1.16.0\n'
                         'pyinotify>=0.9.6')
-            self.assertDictEqual(
+            self.assertEqual(
                 renderspec._get_requirements([f1]),
                 {'paramiko': '1.16.0', 'pyinotify': '0.9.6'})
         finally:

@@ -31,6 +31,7 @@ import pymod2pkg
 import yaml
 
 from renderspec.distloader import RenderspecLoader
+from renderspec import utils
 from renderspec import versions
 
 
@@ -45,6 +46,31 @@ def _context_check_variable(context, var_name, needed_by):
     if var_name not in context.vars:
         raise TemplateRuntimeError("Variable '%s' not available in context but"
                                    " needed for '%s'" % (var_name, needed_by))
+
+
+def _context_upstream_version(context, pkg_version=None):
+    """return the version which should be set to the 'upstream_version'
+    variable in the jinja context"""
+    if pkg_version:
+        return pkg_version
+    else:
+        # try to auto-detect the version - for that we need the pypi name
+        _context_check_variable(context, CONTEXT_VAR_PYPI_NAME,
+                                'upstream_version')
+        pypi_name = context.vars[CONTEXT_VAR_PYPI_NAME]
+        # look for archives in the dir where the input template (.spec.j2)
+        # comes from. As fallback, also look in the current working dir
+        archives = utils._find_archives([context['input_template_dir'], '.'],
+                                        pypi_name)
+        for archive in archives:
+            with utils._extract_archive_to_tempdir(archive) as tmpdir:
+                pkg_info_file = utils._find_pkg_info(tmpdir)
+                if pkg_info_file:
+                    return utils._get_version_from_pkg_info(pkg_info_file)
+        # unable to autodetect the version
+        raise TemplateRuntimeError("Can not autodetect 'upstream_version' from"
+                                   " the following archives: '%s'" % (
+                                       ', '.join(archives)))
 
 
 def _context_py2rpmversion(context):
@@ -188,6 +214,11 @@ def _globals_py2pkg(context, pkg_name, pkg_version=None):
 
 
 @contextfunction
+def _globals_upstream_version(context, pkg_version=None):
+    return _context_upstream_version(context, pkg_version)
+
+
+@contextfunction
 def _globals_py2rpmversion(context):
     return _context_py2rpmversion(context)
 
@@ -221,6 +252,7 @@ def _env_register_filters_and_globals(env):
     env.globals['py2name'] = _globals_py2name
     env.globals['epoch'] = _globals_epoch
     env.globals['license'] = _globals_license_spdx
+    env.globals['upstream_version'] = _globals_upstream_version
 
 
 def generate_spec(spec_style, epochs, requirements, input_template_path):
@@ -236,8 +268,10 @@ def generate_spec(spec_style, epochs, requirements, input_template_path):
     if spec_style in env.loader.list_templates():
         template_name = spec_style
     template = env.get_template(template_name)
+    input_template_dir = os.path.dirname(os.path.abspath(input_template_path))
     return template.render(spec_style=spec_style, epochs=epochs,
-                           requirements=requirements)
+                           requirements=requirements,
+                           input_template_dir=input_template_dir)
 
 
 def _is_fedora(distname):

@@ -28,6 +28,7 @@ from jinja2.exceptions import TemplateRuntimeError
 from mock import Mock, patch
 import os
 import renderspec
+import renderspec.utils
 import renderspec.versions
 import shutil
 import tempfile
@@ -102,6 +103,12 @@ class RenderspecContextFunctionTests(unittest.TestCase):
             renderspec._context_epoch(
                 {'spec_style': 'suse', 'epochs': {'oslo.config': 4},
                  'requirements': {}}, 'oslo.config'), 4)
+
+    def test_context_upstream_version(self):
+        context = {'spec_style': 'suse', 'epochs': {},
+                   'requirements': {}}
+        self.assertEqual(renderspec._context_upstream_version(
+                context, '1.2.0'), '1.2.0')
 
 
 @ddt
@@ -402,6 +409,88 @@ class RenderspecDistTeamplatesTests(unittest.TestCase):
             self.assertEqual(out, expected_out)
         finally:
             shutil.rmtree(tmpdir)
+
+
+@ddt
+class RenderspecUtilsTests(unittest.TestCase):
+    def _write_pkg_info(self, destdir, version='5.10.0'):
+        """write a PKG-INFO file into destdir"""
+        f1 = os.path.join(destdir, 'PKG-INFO')
+        with open(f1, 'w+') as f:
+            f.write('Metadata-Version: 1.1\n'
+                    'Name: oslo.messaging\n'
+                    'Version: %s' % (version))
+
+    def test__extract_archive_to_tempdir_no_file(self):
+        with self.assertRaises(Exception) as e_info:
+            with renderspec.utils._extract_archive_to_tempdir("foobar"):
+                self.assertIn("foobar", str(e_info))
+
+    def test__find_pkg_info(self):
+        tmpdir = tempfile.mkdtemp(prefix='renderspec-test_')
+        try:
+            self._write_pkg_info(tmpdir)
+            # we expect _find_pkg_info() to find the file in the tmpdir
+            self.assertEqual(
+                renderspec.utils._find_pkg_info(tmpdir),
+                os.path.join(tmpdir, 'PKG-INFO')
+            )
+        finally:
+            shutil.rmtree(tmpdir)
+
+    def test__find_pkg_info_not_found(self):
+        tmpdir = tempfile.mkdtemp(prefix='renderspec-test_')
+        try:
+            self.assertEqual(
+                renderspec.utils._find_pkg_info(tmpdir),
+                None
+            )
+        finally:
+            shutil.rmtree(tmpdir)
+
+    def _test__version_from_pkg_info(self):
+        tmpdir = tempfile.mkdtemp(prefix='renderspec-test_')
+        version = '5.10.0'
+        try:
+            self._write_pkg_info(tmpdir, version)
+            pkg_info_file = renderspec.utils._find_pkg_info(tmpdir),
+            self.assertEqual(
+                renderspec.utils._get_version_from_pkg_info(pkg_info_file),
+                version
+            )
+        finally:
+            shutil.rmtree(tmpdir)
+
+    @data(
+        (['foo-1.2.3.tar.gz'], 'foo', ['foo-1.2.3.tar.gz']),
+        (['foo-1.2.3.tar.gz', 'bar-1.2.3.xz'], 'foo', ['foo-1.2.3.tar.gz']),
+        (['foo-1.2.3.tar.gz'], 'bar', []),
+    )
+    @unpack
+    def _test__find_archives(self, archives, pypi_name, expected):
+        tmpdir = tempfile.mkdtemp(prefix='renderspec-test_')
+        try:
+            for a in archives:
+                open(os.path.join(tmpdir, a), 'w').close()
+            self.assertEqual(
+                renderspec.utils._find_archives(tmpdir, pypi_name),
+                expected
+            )
+        finally:
+            shutil.rmtree(tmpdir)
+
+    def _test__find_archives_multiple_dirs(self):
+        tmpdir1 = tempfile.mkdtemp(prefix='renderspec-test_')
+        tmpdir2 = tempfile.mkdtemp(prefix='renderspec-test_')
+        try:
+            open(os.path.join(tmpdir2, 'foo-1.2.3.tar.xz'), 'w').close()
+            self.assertEqual(
+                renderspec.utils._find_archives([tmpdir1, tmpdir2], 'foo'),
+                ['foo-1.2.3.tar.xz']
+            )
+        finally:
+            shutil.rmtree(tmpdir1)
+            shutil.rmtree(tmpdir2)
 
 
 if __name__ == '__main__':

@@ -85,7 +85,7 @@ and uses a combination of RPM `Version` and `Release` tag to express pre-release
 To support both styles with renderspec, the upstream version and a release
 must be available in the context::
 
-  {% set upstream_version = '1.2.3.0rc1' %}
+  {% set upstream_version = upstream_version('1.2.3.0rc1') %}
   {% set rpm_release = '1' %}
 
 This should be done on the first lines in the spec.j2 template. The `rpm_release` is
@@ -108,7 +108,7 @@ For fedora-style, this renders to::
 Note that in case of pre-releases you may need to adjust the version that is used
 in the `Source` tag and the `%prep` sections `%setup`. So use e.g. ::
 
-  {% set upstream_version = '1.2.3.0rc1' %}
+  {% set upstream_version = upstream_version('1.2.3.0rc1') %}
   {% set rpm_release = '1' %}
   %name oslo.config
   Version: {{ py2rpmversion() }}
@@ -126,6 +126,21 @@ which would render (with suse-style) to::
   %prep
   %setup -q -n %{sname}-1.2.3.0rc1
 
+The `upstream_version` can also be automatically detected from archive files
+(like sdist archives available from pypi) which contain a valid `PKG-INFO`_ file.
+For automatic version detection, the context need to know the `pypi_name` and a
+archive file must be available and the context variable `upstream_version` needs to
+be set to the value of the context function `upstream_version()`. The difference
+here is that the version in `upstream_version()` is not explicit given::
+
+  {% set pypi_name = 'oslo.config' %}
+  {% set upstream_version = upstream_version() %}
+  {% set rpm_release = '1' %}
+
+  Version: {{ py2rpmversion() }}
+  Release: {{ py2rpmrelease() }}
+
+.. _PKG-INFO: https://www.python.org/dev/peps/pep-0314/
 
 Template features
 =================
@@ -224,6 +239,27 @@ With the `fedora` spec-style, this would be rendered to::
 With the `suse` spec-style::
 
   License: Apache-2.0
+
+
+context function `upstream_version`
+***********************************
+This function can be used to assign a static version to the variable `upstream_version`
+or to dynamically detect the version from a archive (eg. an sdist tarball).
+Static assignment looks like::
+
+  {% set upstream_version = upstream_version('1.1.0a3') %}
+
+which is basically the same as::
+
+  {% set upstream_version = '1.1.0a3' %}
+
+So static assignment is not that useful. Dynamic assignment looks like::
+
+  {% set pypi_name = 'oslo.config' %}
+  {% set upstream_version = upstream_version() %}
+
+Note that for dynamic version detection, the variable `pypi_name` needs to be set
+before calling `upstream_version()`.
 
 
 context function `py2rpmversion`

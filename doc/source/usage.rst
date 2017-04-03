@@ -135,20 +135,31 @@ Jinja can be used in the templates. Beside the Jinja provided features, there ar
 some extra features renderspec adds to the template context.
 
 context function `py2name`
-***********************
+**************************
 `py2name` is used to translate a given pypi name to a package name following the
 different distribution specific guidelines.
 
 .. note:: For translating pypi names (the name a python package has on `pypi.python.org`_
           to distro specific names, internally a module called `pymod2pkg`_ is used.
 
-For example, to define a package name and use the `py2name` context function, do::
+The prefered way to use `py2name` is to set the context variable `pypi_name` and
+then call `py2name()` without any parameters. In that case, the context variable
+is used::
 
-  Name: {{ py2name('oslo.config') }}
+  {% set pypi_name = 'oslo.config' %}
+  Name: {{ py2name() }}
 
 Rendering this template :program:`renderspec` with the `suse` style would result in::
 
   Name: python-oslo.config
+
+It is also possible to pass the pypi name directly to the `py2name` context function::
+
+  Name: {{ py2name('oslo.config') }}
+
+That would create the same rendering result.
+If the context env var `pypi_name` is set **and** `py2name` is called with a parameter,
+the parameter is used instead of the context var.
 
 
 context function `py2pkg`
@@ -284,6 +295,40 @@ define other result for `suse` spec style.
 
 For more information, see current `renderspec/dist-templates` and usage in
 `openstack/rpm-packaging`_ project.
+
+Available context variables
+===========================
+
+There are some variables that need to be set in the spec.j2 template. Preferable
+at the beginning before any context function is used.
+
+pypi_name
+*********
+
+This variable defines the name that is used on pypi. Set with::
+
+  {% set pypi_name = 'oslo.messaging' %}
+
+where 'oslo.messaging' is the name that is set. The variable can later be used::
+
+  Source: {{ pypi_name }}.tar.gz
+
+upstream_version
+****************
+
+The variable defines the upstream version that is used::
+
+  {% set upstream_version = '1.2.3.0rc1' %}
+
+
+rpm_release
+***********
+The variable defines the rpm release. It is used together with 'upstream_version'
+and only needed with the fedora spec style::
+
+  {% set rpm_release = '1' %}
+
+
 
 
 .. _Jinja2: http://jinja.pocoo.org/docs/dev/

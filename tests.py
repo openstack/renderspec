@@ -23,6 +23,7 @@ except ImportError:
 from ddt import data, ddt, unpack
 
 from jinja2 import Environment
+from jinja2.exceptions import TemplateRuntimeError
 
 from mock import Mock, patch
 import os
@@ -176,6 +177,14 @@ class RenderspecTemplateFunctionTests(unittest.TestCase):
           'requirements': {'requests': '1.4.0'}},
          "{{ py2name('requests') }}",
          "python-requests"),
+        # with pypi_name context var
+        ({'spec_style': 'suse', 'epochs': {}, 'requirements': {}},
+         "{% set pypi_name = 'oslo.messaging' %}{{ py2name() }}",
+         "python-oslo.messaging"),
+        # with pypi_name context var and explicit parameter
+        ({'spec_style': 'suse', 'epochs': {}, 'requirements': {}},
+         "{% set pypi_name = 'oslo.messaging' %}{{ py2name('requests') }}",
+         "python-requests"),
     )
     @unpack
     def test_render_func_py2name(self, context, string, expected_result):
@@ -184,6 +193,16 @@ class RenderspecTemplateFunctionTests(unittest.TestCase):
         self.assertEqual(
             template.render(**context),
             expected_result)
+
+    def test_render_func_py2name_raise(self):
+        """py2name() called without parameter but no pypi_name context
+        variable set"""
+        template = self.env.from_string(
+            "{{ py2name() }}")
+        with self.assertRaises(TemplateRuntimeError):
+            template.render(
+                **{'spec_style': 'suse', 'epochs': {}, 'requirements': {}}
+            )
 
     @data(
         ('suse', '1.1.0', '1.1.0'),

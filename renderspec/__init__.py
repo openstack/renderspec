@@ -35,6 +35,7 @@ from renderspec import versions
 
 
 # a variable that needs to be set for some functions in the context
+CONTEXT_VAR_PYPI_NAME = "pypi_name"
 CONTEXT_VAR_UPSTREAM_VERSION = "upstream_version"
 CONTEXT_VAR_RPM_RELEASE = "rpm_release"
 
@@ -102,7 +103,12 @@ def _context_epoch(context, pkg_name):
     return context['epochs'].get(pkg_name, 0)
 
 
-def _context_py2name(context, pkg_name):
+def _context_py2name(context, pkg_name=None):
+    if not pkg_name:
+        # if the name is not given, try to get the name from the context
+        _context_check_variable(context, CONTEXT_VAR_PYPI_NAME,
+                                'py2name')
+        pkg_name = context.vars[CONTEXT_VAR_PYPI_NAME]
     return pymod2pkg.module2package(pkg_name, context['spec_style'])
 
 
@@ -202,7 +208,7 @@ def _globals_license_spdx(context, value):
 
 
 @contextfunction
-def _globals_py2name(context, value):
+def _globals_py2name(context, value=None):
     return _context_py2name(context, value)
 
 

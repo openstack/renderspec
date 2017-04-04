@@ -275,18 +275,18 @@ contains child templates in `renderspec/dist-templates` which are
 automatically used with corresponding `--spec-style`. These allow different
 output for each spec style (distro) using jinja `{% block %}` syntax.
 
-For example consider simple `renderspec/dist-templates/fedora.spec.j2`:
+For example consider simple `renderspec/dist-templates/fedora.spec.j2`::
 
   {% extends ".spec" %}
   {% block build_requires %}
   BuildRequires:  {{ py2pkg('setuptools') }}
   {% endblock %}
 
-allows following in a spec template:
+allows following in a spec template::
 
   {% block build_requires %}{% endblock %}
 
-to render into
+to render into::
 
   BuildRequires:  python-setuptools
 

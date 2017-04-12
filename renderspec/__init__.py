@@ -255,7 +255,8 @@ def _env_register_filters_and_globals(env):
     env.globals['upstream_version'] = _globals_upstream_version
 
 
-def generate_spec(spec_style, epochs, requirements, input_template_path):
+def generate_spec(spec_style, epochs, requirements, input_template_path,
+                  output_path):
     """generate a spec file with the given style and the given template"""
 
     env = Environment(loader=RenderspecLoader(
@@ -269,9 +270,15 @@ def generate_spec(spec_style, epochs, requirements, input_template_path):
         template_name = spec_style
     template = env.get_template(template_name)
     input_template_dir = os.path.dirname(os.path.abspath(input_template_path))
+    if output_path:
+        output_dir = os.path.dirname(
+            os.path.abspath(output_path))
+    else:
+        output_dir = None
     return template.render(spec_style=spec_style, epochs=epochs,
                            requirements=requirements,
-                           input_template_dir=input_template_dir)
+                           input_template_dir=input_template_dir,
+                           output_dir=output_dir)
 
 
 def _is_fedora(distname):
@@ -372,11 +379,17 @@ def main():
     except IOError as e:
         print(e)
         return 3
-    spec = generate_spec(args['spec_style'], epochs, requirements,
-                         input_template)
+
     if output_fn and output_fn != '-':
-        print("Rendering: %s -> %s" % (input_template, output_fn))
-        with open(output_fn, "w") as o:
+        output_path = os.path.abspath(output_fn)
+    else:
+        output_path = None
+
+    spec = generate_spec(args['spec_style'], epochs, requirements,
+                         input_template, output_path)
+    if output_path:
+        print("Rendering: %s -> %s" % (input_template, output_path))
+        with open(output_path, "w") as o:
             o.write(spec)
     else:
         print(spec)

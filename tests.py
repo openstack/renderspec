@@ -466,12 +466,12 @@ class RenderspecUtilsTests(unittest.TestCase):
         finally:
             shutil.rmtree(tmpdir)
 
-    def _test__version_from_pkg_info(self):
+    def test__version_from_pkg_info(self):
         tmpdir = tempfile.mkdtemp(prefix='renderspec-test_')
         version = '5.10.0'
         try:
             self._write_pkg_info(tmpdir, version)
-            pkg_info_file = renderspec.utils._find_pkg_info(tmpdir),
+            pkg_info_file = renderspec.utils._find_pkg_info(tmpdir)
             self.assertEqual(
                 renderspec.utils._get_version_from_pkg_info(pkg_info_file),
                 version
@@ -485,7 +485,7 @@ class RenderspecUtilsTests(unittest.TestCase):
         (['foo-1.2.3.tar.gz'], 'bar', []),
     )
     @unpack
-    def _test__find_archives(self, archives, pypi_name, expected):
+    def test__find_archives(self, archives, pypi_name, expected):
         tmpdir = tempfile.mkdtemp(prefix='renderspec-test_')
         try:
             for a in archives:
@@ -497,7 +497,7 @@ class RenderspecUtilsTests(unittest.TestCase):
         finally:
             shutil.rmtree(tmpdir)
 
-    def _test__find_archives_multiple_dirs(self):
+    def test__find_archives_multiple_dirs(self):
         tmpdir1 = tempfile.mkdtemp(prefix='renderspec-test_')
         tmpdir2 = tempfile.mkdtemp(prefix='renderspec-test_')
         try:

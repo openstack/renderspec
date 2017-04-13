@@ -503,12 +503,16 @@ class RenderspecUtilsTests(unittest.TestCase):
         try:
             open(os.path.join(tmpdir2, 'foo-1.2.3.tar.xz'), 'w').close()
             self.assertEqual(
-                renderspec.utils._find_archives([tmpdir1, tmpdir2], 'foo'),
+                renderspec.utils._find_archives([None, tmpdir1, tmpdir2],
+                                                'foo'),
                 ['foo-1.2.3.tar.xz']
             )
         finally:
             shutil.rmtree(tmpdir1)
             shutil.rmtree(tmpdir2)
+
+    def test__find_archives_only_no_dir(self):
+        self.assertEqual(renderspec.utils._find_archives([None], 'foo'), [])
 
 
 if __name__ == '__main__':

@@ -66,10 +66,14 @@ def _context_upstream_version(context, pkg_version=None):
         _context_check_variable(context, CONTEXT_VAR_PYPI_NAME,
                                 'upstream_version')
         pypi_name = context.vars[CONTEXT_VAR_PYPI_NAME]
-        # look for archives in the dir where the input template (.spec.j2)
-        # comes from. As fallback, also look in the current working dir
-        archives = utils._find_archives([context['input_template_dir'], '.'],
-                                        pypi_name)
+
+        # look for archives in:
+        # 1) the output_dir
+        # 2) the dir where the input template (.spec.j2) comes from
+        # 3) the current working dir
+        archives = utils._find_archives([context['output_dir'],
+                                         context['input_template_dir'],
+                                         '.'], pypi_name)
         for archive in archives:
             with utils._extract_archive_to_tempdir(archive) as tmpdir:
                 pkg_info_file = utils._find_pkg_info(tmpdir)

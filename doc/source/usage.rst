@@ -131,14 +131,17 @@ The `upstream_version` can also be automatically detected from archive files
 For automatic version detection, the context need to know the `pypi_name` and a
 archive file must be available and the context variable `upstream_version` needs to
 be set to the value of the context function `upstream_version()`. The difference
-here is that the version in `upstream_version()` is not explicit given::
+here is that the version in `upstream_version()` is not explicit given. The archive
+can be fetched with the `fetch_source()` function::
 
+  {% set source = fetch_source('http://tarballs.openstack.org/oslo.config/oslo.config-master.tar.gz') %}
   {% set pypi_name = 'oslo.config' %}
   {% set upstream_version = upstream_version() %}
   {% set rpm_release = '1' %}
 
   Version: {{ py2rpmversion() }}
   Release: {{ py2rpmrelease() }}
+  Source0: {{ source }}
 
 .. _PKG-INFO: https://www.python.org/dev/peps/pep-0314/
 
@@ -259,7 +262,12 @@ So static assignment is not that useful. Dynamic assignment looks like::
   {% set upstream_version = upstream_version() %}
 
 Note that for dynamic version detection, the variable `pypi_name` needs to be set
-before calling `upstream_version()`.
+before calling `upstream_version()`. `upstream_version()` tries to find an archive
+in:
+
+1. the output directory where the rendered .spec file ends
+2. the directory where the .spec.j2 template comes from
+3. the current working directory
 
 
 context function `py2rpmversion`

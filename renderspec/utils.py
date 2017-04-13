@@ -71,7 +71,7 @@ def _find_archives(directories, basename):
     if isinstance(directories, six.string_types):
         directories = [directories]
 
-    return [f for d in directories for f in os.listdir(d)
+    return [f for d in directories if d for f in os.listdir(d)
             if f.startswith(basename) and
             f.endswith(('tar.gz', 'zip', 'tar.bz2', 'xz'))]
 

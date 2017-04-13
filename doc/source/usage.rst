@@ -303,6 +303,18 @@ Note that you need to set 2 context variables (`upstream_version` and `rpm_relea
 to be able to use the `py2rpmrelease()` function.
 
 
+context function `fetch_source`
+*******************************
+The function `fetch_source` downloads the given url and puts the file into the
+`output_dir` (that's the directory where the rendered .spec file will be in).
+If `output_dir` is not available (that's the case when `renderspec` writes the
+rendered spec to stdout) the download is skipped. But in any case the function
+returns the same url that it got as parameter::
+
+  {% set source = fetch_source('http://tarballs.openstack.org/oslo.log/oslo.log-master.tar.gz') %}
+  Source0: {{ source }}
+
+
 distribution specific blocks & child templates
 **********************************************
 

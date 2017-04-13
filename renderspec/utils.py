@@ -16,6 +16,7 @@
 
 from __future__ import print_function
 
+from contextlib import closing
 from contextlib import contextmanager
 from email.parser import HeaderParser
 import os
@@ -25,6 +26,20 @@ import tempfile
 import zipfile
 
 import six
+from six.moves.urllib.request import urlopen
+
+
+def _download_file(url, dest_dir, dest_filename):
+    """download a given url to a given destination directory and
+    destination filenamee"""
+    filename = os.path.join(dest_dir, dest_filename)
+    with closing(urlopen(url)) as response:  # nosec
+        with open(filename, 'wb') as f:
+            while True:
+                buf = response.read(8192)
+                if not buf:
+                    break
+                f.write(buf)
 
 
 @contextmanager

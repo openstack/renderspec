@@ -110,6 +110,23 @@ class RenderspecContextFunctionTests(unittest.TestCase):
         self.assertEqual(renderspec._context_upstream_version(
                 context, '1.2.0'), '1.2.0')
 
+    @data(
+        # no output_dir -> download_files should not be called
+        (None, 0),
+        # output_dir defined -> download_files should be called once
+        ('.', 1)
+    )
+    @unpack
+    def test_context_fetch_source_no_output_dir(self, output_dir,
+                                                expected_calls):
+        context = {'spec_style': 'suse', 'epochs': {},
+                   'requirements': {}, 'output_dir': output_dir}
+        url = 'http://foo/bar'
+        with patch('renderspec.utils._download_file') as m:
+            self.assertEqual(renderspec._context_fetch_source(
+                context, url), url)
+            self.assertEqual(m.call_count, expected_calls)
+
 
 @ddt
 class RenderspecTemplateFunctionTests(unittest.TestCase):

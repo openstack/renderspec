@@ -48,6 +48,14 @@ def _context_check_variable(context, var_name, needed_by):
                                    " needed for '%s'" % (var_name, needed_by))
 
 
+def _context_fetch_source(context, url):
+    """fetch the given url into the output_dir and return the url"""
+    if context['output_dir']:
+        filename = os.path.basename(url)
+        utils._download_file(url, context['output_dir'], filename)
+    return url
+
+
 def _context_upstream_version(context, pkg_version=None):
     """return the version which should be set to the 'upstream_version'
     variable in the jinja context"""
@@ -214,6 +222,11 @@ def _globals_py2pkg(context, pkg_name, pkg_version=None):
 
 
 @contextfunction
+def _globals_fetch_source(context, url):
+    return _context_fetch_source(context, url)
+
+
+@contextfunction
 def _globals_upstream_version(context, pkg_version=None):
     return _context_upstream_version(context, pkg_version)
 
@@ -253,6 +266,7 @@ def _env_register_filters_and_globals(env):
     env.globals['epoch'] = _globals_epoch
     env.globals['license'] = _globals_license_spdx
     env.globals['upstream_version'] = _globals_upstream_version
+    env.globals['fetch_source'] = _globals_fetch_source
 
 
 def generate_spec(spec_style, epochs, requirements, input_template_path,

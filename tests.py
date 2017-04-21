@@ -487,6 +487,7 @@ class RenderspecUtilsTests(unittest.TestCase):
     @unpack
     def test__find_archives(self, archives, pypi_name, expected):
         tmpdir = tempfile.mkdtemp(prefix='renderspec-test_')
+        expected = [os.path.join(tmpdir, e) for e in expected]
         try:
             for a in archives:
                 open(os.path.join(tmpdir, a), 'w').close()
@@ -505,7 +506,7 @@ class RenderspecUtilsTests(unittest.TestCase):
             self.assertEqual(
                 renderspec.utils._find_archives([None, tmpdir1, tmpdir2],
                                                 'foo'),
-                ['foo-1.2.3.tar.xz']
+                [os.path.join(tmpdir2, 'foo-1.2.3.tar.xz')]
             )
         finally:
             shutil.rmtree(tmpdir1)

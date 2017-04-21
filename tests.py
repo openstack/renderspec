@@ -135,6 +135,16 @@ class RenderspecTemplateFunctionTests(unittest.TestCase):
         self.env = Environment()
         renderspec._env_register_filters_and_globals(self.env)
 
+    @data(
+        ("{{ 'http://foo/bar'|basename }}", "bar")
+    )
+    @unpack
+    def test_render_func_basename(self, input, expected):
+        template = self.env.from_string(input)
+        self.assertEqual(
+            template.render(spec_style='suse', epochs={}, requirements={}),
+            expected)
+
     def test_render_func_license_spdx(self):
         template = self.env.from_string(
             "{{ license('Apache-2.0') }}")

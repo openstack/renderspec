@@ -323,6 +323,18 @@ returns the same url that it got as parameter::
   Source0: {{ source }}
 
 
+context filter `basename`
+*************************
+This is a filter which just returns ```os.path.basename()```::
+
+  {% set source = fetch_source('http://tarballs.openstack.org/oslo.log/oslo.log-master.tar.gz') %}
+  Source0: {{ source|basename }}
+
+which then renders to::
+
+  Source0: oslo.log-master.tar.gz
+
+
 distribution specific blocks & child templates
 **********************************************
 

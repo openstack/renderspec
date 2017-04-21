@@ -217,6 +217,11 @@ def _filter_epoch(context, value):
     return _context_epoch(context, value)
 
 
+@contextfilter
+def _filter_basename(context, value):
+    return os.path.basename(value)
+
+
 ################
 # jinja2 globals
 ################
@@ -263,6 +268,7 @@ def _globals_py2name(context, value=None):
 def _env_register_filters_and_globals(env):
     """register all the jinja2 filters we want in the environment"""
     env.filters['epoch'] = _filter_epoch
+    env.filters['basename'] = _filter_basename
     env.globals['py2rpmversion'] = _globals_py2rpmversion
     env.globals['py2rpmrelease'] = _globals_py2rpmrelease
     env.globals['py2pkg'] = _globals_py2pkg

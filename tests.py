@@ -32,6 +32,7 @@ import renderspec.utils
 import renderspec.versions
 import shutil
 import tempfile
+import time
 
 
 @ddt
@@ -492,6 +493,9 @@ class RenderspecUtilsTests(unittest.TestCase):
     @data(
         (['foo-1.2.3.tar.gz'], 'foo', ['foo-1.2.3.tar.gz']),
         (['foo-1.2.3.tar.gz', 'bar-1.2.3.xz'], 'foo', ['foo-1.2.3.tar.gz']),
+        # now 2 valid archives - latest created one should be first
+        (['foo-1.2.3.tar.gz', 'foo-2.3.4.xz'], 'foo',
+         ['foo-2.3.4.xz', 'foo-1.2.3.tar.gz']),
         (['foo-1.2.3.tar.gz'], 'bar', []),
     )
     @unpack
@@ -501,6 +505,7 @@ class RenderspecUtilsTests(unittest.TestCase):
         try:
             for a in archives:
                 open(os.path.join(tmpdir, a), 'w').close()
+                time.sleep(0.1)
             self.assertEqual(
                 renderspec.utils._find_archives(tmpdir, pypi_name),
                 expected

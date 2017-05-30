@@ -71,9 +71,11 @@ def _find_archives(directories, basename):
     if isinstance(directories, six.string_types):
         directories = [directories]
 
-    return [os.path.join(d, f) for d in directories if d for f in os.listdir(d)
-            if f.startswith(basename) and
-            f.endswith(('tar.gz', 'zip', 'tar.bz2', 'xz'))]
+    return sorted(
+        [os.path.join(d, f) for d in directories if d for f in os.listdir(d)
+         if f.startswith(basename) and
+         f.endswith(('tar.gz', 'zip', 'tar.bz2', 'xz'))],
+        key=lambda x: os.stat(x).st_mtime, reverse=True)
 
 
 def _find_pkg_info(directory):

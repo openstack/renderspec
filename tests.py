@@ -308,6 +308,11 @@ class RenderspecVersionsTests(unittest.TestCase):
             ['sphinx>=1.1.2,!=1.2.0,!=1.3b1,<1.3  # BSD'])
         self.assertEqual(requires, {'sphinx': '1.1.2'})
 
+    def test_lexical_version(self):
+        requires = renderspec.versions.get_requirements(
+            ['django>=1.8,<1.10  # FOO BAR'])
+        self.assertEqual(requires, {'django': '1.8'})
+
     def test_with_multiple_versions_and_invalid_lowest(self):
         requires = renderspec.versions.get_requirements(
             ['sphinx>=1.1.2,!=1.1.0,!=1.3b1,<1.3  # BSD'])

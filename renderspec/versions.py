@@ -17,6 +17,7 @@
 from __future__ import print_function
 
 from packaging.requirements import Requirement
+from packaging.version import Version
 
 
 def get_requirements(lines):
@@ -46,9 +47,9 @@ def get_requirements(lines):
                 # we don't want a lowest version which is not allowed
                 if s.operator == '!=':
                     continue
-                if not lowest or s.version < lowest.version:
-                    lowest = s
+                if not lowest or Version(s.version) < lowest:
+                    lowest = Version(s.version)
 
             if lowest:
-                requires[r.name] = lowest.version
+                requires[r.name] = str(lowest)
     return requires

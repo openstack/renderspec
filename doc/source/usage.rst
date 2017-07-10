@@ -323,6 +323,17 @@ returns the same url that it got as parameter::
   Source0: {{ source }}
 
 
+context function `url_pypi`
+***************************
+The function `url_pypi` return a full url to a sdist tar.gz tarball on pypi. The function
+requires the contect variables `upstream_version` and `pypi_name`.
+For example::
+
+  {% set pypi_name = 'oslo.concurrency' %}
+  {% set upstream_version = upstream_version('3.20.0') %}
+  {% set source = fetch_source(url_pypi()) %}
+
+
 context filter `basename`
 *************************
 This is a filter which just returns ```os.path.basename()```::

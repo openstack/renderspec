@@ -291,6 +291,18 @@ class RenderspecTemplateFunctionTests(unittest.TestCase):
             template.render(**context),
             rpm_release_expected)
 
+    def test_render_func_url_pypi(self):
+        context = {'spec_style': 'suse', 'epochs': {}, 'requirements': {}}
+        # need to escape '{' and '}' here
+        s = "{% set upstream_version = '3.20.0' %}" \
+            "{% set pypi_name = 'oslo.concurrency' %}" \
+            "{{ url_pypi() }}"
+        template = self.env.from_string(s)
+        self.assertEqual(
+            template.render(**context),
+            "https://files.pythonhosted.org/packages/source/o/"
+            "oslo.concurrency/oslo.concurrency-3.20.0.tar.gz")
+
 
 class RenderspecVersionsTests(unittest.TestCase):
     def test_without_version(self):

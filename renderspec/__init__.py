@@ -56,6 +56,21 @@ def _context_fetch_source(context, url):
     return url
 
 
+def _context_url_pypi(context):
+    """return the full sdist pypi url"""
+    # we need the pypi_name and the upstream_version variables to construct
+    # the full url
+    _context_check_variable(context, CONTEXT_VAR_PYPI_NAME,
+                            'pypi_name')
+
+    _context_check_variable(context, CONTEXT_VAR_UPSTREAM_VERSION,
+                            'upstream_version')
+    name = context.vars[CONTEXT_VAR_PYPI_NAME]
+    version = context.vars[CONTEXT_VAR_UPSTREAM_VERSION]
+    return 'https://files.pythonhosted.org/packages/source/' \
+        '%s/%s/%s-%s.tar.gz' % (name[0], name, name, version)
+
+
 def _context_upstream_version(context, pkg_version=None):
     """return the version which should be set to the 'upstream_version'
     variable in the jinja context"""
@@ -236,6 +251,11 @@ def _globals_fetch_source(context, url):
 
 
 @contextfunction
+def _globals_url_pypi(context):
+    return _context_url_pypi(context)
+
+
+@contextfunction
 def _globals_upstream_version(context, pkg_version=None):
     return _context_upstream_version(context, pkg_version)
 
@@ -277,6 +297,7 @@ def _env_register_filters_and_globals(env):
     env.globals['license'] = _globals_license_spdx
     env.globals['upstream_version'] = _globals_upstream_version
     env.globals['fetch_source'] = _globals_fetch_source
+    env.globals['url_pypi'] = _globals_url_pypi
 
 
 def generate_spec(spec_style, epochs, requirements, input_template_path,

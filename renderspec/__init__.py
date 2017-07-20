@@ -410,13 +410,13 @@ def main():
         if not input_template:
             print(errmsg)
             return 1
-    output_fn = args['output']
-    if not output_fn:
+    output_filename = args['output']
+    if not output_filename:
         if not input_template.endswith('.spec.j2'):
             print("Failed to autodetect output file name. "
                   "Please specify using `-o/--output`.")
             return 2
-        output_fn, _, _ = input_template.rpartition('.')
+        output_filename, _, _ = input_template.rpartition('.')
 
     try:
         epochs = _get_epochs(args['epochs'])
@@ -425,8 +425,8 @@ def main():
         print(e)
         return 3
 
-    if output_fn and output_fn != '-':
-        output_path = os.path.abspath(output_fn)
+    if output_filename and output_filename != '-':
+        output_path = os.path.abspath(output_filename)
     else:
         output_path = None
 

@@ -28,6 +28,7 @@ from jinja2.exceptions import TemplateRuntimeError
 from mock import Mock, patch
 import os
 import renderspec
+import renderspec.contextfuncs
 import renderspec.utils
 import renderspec.versions
 import shutil
@@ -40,12 +41,12 @@ class RenderspecContextFunctionTests(unittest.TestCase):
     """test functions which do some calculation based on the context"""
     def test_context_license_spdx(self):
         self.assertEqual(
-            renderspec._context_license_spdx(
+            renderspec.contextfuncs._context_license_spdx(
                 {'spec_style': 'suse'}, 'Apache-2.0'),
             'Apache-2.0'
         )
         self.assertEqual(
-            renderspec._context_license_spdx(
+            renderspec.contextfuncs._context_license_spdx(
                 {'spec_style': 'fedora'}, 'Apache-2.0'),
             'ASL 2.0'
         )
@@ -90,25 +91,25 @@ class RenderspecContextFunctionTests(unittest.TestCase):
     def test_context_py2pkg(self, context, pkg_name, pkg_version,
                             expected_result):
         self.assertEqual(
-            renderspec._context_py2pkg(context, pkg_name, pkg_version),
-            expected_result)
+            renderspec.contextfuncs._context_py2pkg(
+                context, pkg_name, pkg_version), expected_result)
 
     def test_context_epoch_without_epochs(self):
         self.assertEqual(
-            renderspec._context_epoch(
+            renderspec.contextfuncs._context_epoch(
                 {'spec_style': 'suse', 'epochs': {}, 'requirements': {}},
                 'oslo.config'), 0)
 
     def test_context_epoch_with_epochs(self):
         self.assertEqual(
-            renderspec._context_epoch(
+            renderspec.contextfuncs._context_epoch(
                 {'spec_style': 'suse', 'epochs': {'oslo.config': 4},
                  'requirements': {}}, 'oslo.config'), 4)
 
     def test_context_upstream_version(self):
         context = {'spec_style': 'suse', 'epochs': {},
                    'requirements': {}}
-        self.assertEqual(renderspec._context_upstream_version(
+        self.assertEqual(renderspec.contextfuncs._context_upstream_version(
                 context, '1.2.0'), '1.2.0')
 
     @data(
@@ -124,7 +125,7 @@ class RenderspecContextFunctionTests(unittest.TestCase):
                    'requirements': {}, 'output_dir': output_dir}
         url = 'http://foo/bar'
         with patch('renderspec.utils._download_file') as m:
-            self.assertEqual(renderspec._context_fetch_source(
+            self.assertEqual(renderspec.contextfuncs._context_fetch_source(
                 context, url), url)
             self.assertEqual(m.call_count, expected_calls)
 
@@ -134,7 +135,7 @@ class RenderspecTemplateFunctionTests(unittest.TestCase):
     def setUp(self):
         """create a Jinja2 environment and register the standard filters"""
         self.env = Environment()
-        renderspec._env_register_filters_and_globals(self.env)
+        renderspec.contextfuncs.env_register_filters_and_globals(self.env)
 
     @data(
         ("{{ 'http://foo/bar'|basename }}", "bar")

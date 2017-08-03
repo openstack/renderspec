@@ -388,7 +388,7 @@ class RenderspecCommonTests(unittest.TestCase):
             with open(f1, 'w+') as f:
                 f.write(template)
             rendered = renderspec.generate_spec(
-                style, epochs, requirements, f1, None)
+                style, epochs, requirements, 'spec.j2', f1, None)
             self.assertEqual(rendered, expected_result)
         finally:
             shutil.rmtree(tmpdir)
@@ -451,8 +451,8 @@ class RenderspecDistTeamplatesTests(unittest.TestCase):
             # mock this to use testing dist-tempaltes folder
             mock_dt_path.return_value = dt_dir
 
-            out = renderspec.generate_spec('loldistro', {}, {}, base_path,
-                                           None)
+            out = renderspec.generate_spec('loldistro', {}, {}, 'spec.j2',
+                                           base_path, None)
             self.assertEqual(out, expected_out)
         finally:
             shutil.rmtree(tmpdir)

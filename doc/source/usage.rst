@@ -23,6 +23,10 @@ be done with::
 
   renderspec --spec-style suse example.spec.j2
 
+Different template formats
+**************************
+The only supported input template format is currently called `spec.j2` (which is
+the default).
 
 Handling epochs
 ***************

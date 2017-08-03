@@ -30,10 +30,21 @@ from renderspec import versions
 from renderspec import contextfuncs
 
 
-def generate_spec(spec_style, epochs, requirements, input_template_path,
-                  output_path):
-    """generate a spec file with the given style and the given template"""
+def generate_spec(spec_style, epochs, requirements, input_template_format,
+                  input_template_path, output_path):
+    """generate a spec file with the given style and input template"""
+    if input_template_format == 'spec.j2':
+        return _renderer_input_template_format_spec(
+            spec_style, epochs, requirements, input_template_path,
+            output_path)
+    else:
+        raise Exception('Unknown input-template-format "%s"' %
+                        input_template_format)
 
+
+def _renderer_input_template_format_spec(spec_style, epochs, requirements,
+                                         input_template_path, output_path):
+    """render a 'traditional' .spec.j2 template into a .spec file"""
     env = Environment(loader=RenderspecLoader(
         template_fn=input_template_path),
         trim_blocks=True)
@@ -122,6 +133,9 @@ def process_args():
     parser.add_argument("input-template", nargs='?',
                         help="specfile jinja2 template to render. "
                         "default: *.spec.j2")
+    parser.add_argument("-f", "--input-template-format", help="Format of the "
+                        "input-template file. default: %(default)s",
+                        default="spec.j2", choices=["spec.j2"])
     parser.add_argument("--requirements", help="file(s) which contain "
                         "PEP0508 compatible requirement lines. Last mentioned "
                         "file has highest priority. default: %(default)s",
@@ -161,7 +175,8 @@ def main():
         output_path = None
 
     spec = generate_spec(args['spec_style'], epochs, requirements,
-                         input_template, output_path)
+                         args['input_template_format'], input_template,
+                         output_path)
     if output_path:
         print("Rendering: %s -> %s" % (input_template, output_path))
         with open(output_path, "w") as o:

@@ -115,7 +115,7 @@ def _context_py2rpmversion(context):
             # but in the rpm world, "1.1~a10" < "1.1~dev10"
             v_rpm = v_rpm.replace('a', '~xalpha')
             v_rpm = v_rpm.replace('b', '~xbeta')
-            v_rpm = v_rpm.replace('rc', '~rc')
+            v_rpm = v_rpm.replace('rc', '~xrc')
             v_rpm = v_rpm.replace('.dev', '~dev')
         return v_rpm
 

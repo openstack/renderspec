@@ -183,6 +183,21 @@ That would create the same rendering result.
 If the context env var `pypi_name` is set **and** `py2name` is called with a parameter,
 the parameter is used instead of the context var.
 
+Since `pymod2pkg 0.10.0`, there is the possibility to get a name for a specific python
+version. Currently there are 3 values
+
+* `py`: this is the unversioned name
+* `py2`: this is the python2 name
+* `py3`: this is the python3 name
+
+This can also be used with `py2name()`::
+
+  Name: {{ py2name('oslo.config', py_versions='py3') }}
+
+Rendering this template :program:`renderspec` with the `suse` style would result in::
+
+  Name: python3-oslo.config
+
 
 context function `py2pkg`
 *************************
@@ -215,6 +230,22 @@ rendering with `--requirements`, the rendered spec would contain::
 
   BuildRequires:  python-oslo-config >= 4.3.0
 
+The translation for a specific python version can be done with the `py_versions` parameter
+similar to `py2name()```::
+
+  BuildRequires:  {{ py2pkg('oslo.config', ('>=', '3.4.0'), py_versions='py3') }}
+
+renders to::
+
+  BuildRequires:  python3-oslo-config >= 2:3.4.0
+
+Multiple versions are also possible::
+
+  BuildRequires:  {{ py2pkg('oslo.config', ('>=', '3.4.0'), py_versions=['py2', 'py3']) }}
+
+renders to::
+
+  BuildRequires: python2-oslo-config >= 2:3.4.0 python3-oslo-config >= 2:3.4.0
 
 context function `epoch`
 ************************

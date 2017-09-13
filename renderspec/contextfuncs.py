@@ -147,19 +147,42 @@ def _context_epoch(context, pkg_name):
     return context['epochs'].get(pkg_name, 0)
 
 
-def _context_py2name(context, pkg_name=None):
+def _pymod2pkg_translate(pkg_name, spec_style, py_versions):
+    """translate a given package name for a single or multiple py versions"""
+    if py_versions and not isinstance(py_versions, (list, tuple)):
+        py_versions = [py_versions]
+    kwargs = {'py_vers': py_versions} if py_versions else {}
+    translations = pymod2pkg.module2package(pkg_name, spec_style, **kwargs)
+    # we want always return a list but module2package() might return a string
+    if not isinstance(translations, (list, tuple)):
+        translations = [translations]
+    return translations
+
+
+def _context_py2name(context, pkg_name=None, pkg_version=None,
+                     py_versions=None):
+    """
+    context: a Jinja2 context
+    pkg_name: usually the pypi-name. If None, it tries to get the name
+              from the context variable called 'py2name'
+    pkg_version: Deprecated and unused
+    py_versions: the version pymod2pkg should return. Can be currently 'py',
+                 'py2' and 'py3' or a combination of those in a list
+    """
     if not pkg_name:
         # if the name is not given, try to get the name from the context
         _context_check_variable(context, CONTEXT_VAR_PYPI_NAME,
                                 'py2name')
         pkg_name = context.vars[CONTEXT_VAR_PYPI_NAME]
-    return pymod2pkg.module2package(pkg_name, context['spec_style'])
+    # return always a string to be backwards compat
+    return ' '.join(_pymod2pkg_translate(
+        pkg_name, context['spec_style'], py_versions))
 
 
-def _context_py2pkg(context, pkg_name, pkg_version=None):
+def _context_py2pkg(context, pkg_name, pkg_version=None, py_versions=None):
     """generate a distro specific package name with optional version tuple."""
-    # package name handling
-    name = pymod2pkg.module2package(pkg_name, context['spec_style'])
+    name_list = _pymod2pkg_translate(pkg_name, context['spec_style'],
+                                     py_versions)
 
     # if no pkg_version is given, look in the requirements and set one
     if not pkg_version:
@@ -178,7 +201,7 @@ def _context_py2pkg(context, pkg_name, pkg_version=None):
     else:
         v_str = ''
 
-    return '%s%s' % (name, v_str)
+    return ' '.join(['%s%s' % (name, v_str) for name in name_list])
 
 
 def _context_license_spdx(context, value):
@@ -232,8 +255,8 @@ def _filter_basename(context, value):
 # jinja2 globals
 ################
 @contextfunction
-def _globals_py2pkg(context, pkg_name, pkg_version=None):
-    return _context_py2pkg(context, pkg_name, pkg_version)
+def _globals_py2pkg(context, pkg_name, pkg_version=None, py_versions=None):
+    return _context_py2pkg(context, pkg_name, pkg_version, py_versions)
 
 
 @contextfunction
@@ -272,8 +295,8 @@ def _globals_license_spdx(context, value):
 
 
 @contextfunction
-def _globals_py2name(context, value=None):
-    return _context_py2name(context, value)
+def _globals_py2name(context, value=None, py_versions=None):
+    return _context_py2name(context, value, py_versions=py_versions)
 
 
 def env_register_filters_and_globals(env):

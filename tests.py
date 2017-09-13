@@ -54,45 +54,69 @@ class RenderspecContextFunctionTests(unittest.TestCase):
     @data(
         # without version
         ({'spec_style': 'suse', 'epochs': {}, 'requirements': {}},
-         'oslo.config', None, 'python-oslo.config'),
+         'oslo.config', None, None, 'python-oslo.config'),
         ({'spec_style': 'fedora', 'epochs': {}, 'requirements': {}},
-         'oslo.config', None, 'python-oslo-config'),
+         'oslo.config', None, None, 'python-oslo-config'),
+        # without version, multiple python versions
+        ({'spec_style': 'suse', 'epochs': {}, 'requirements': {}},
+         'oslo.config', None, ('py', 'py3'),
+         'python-oslo.config python3-oslo.config'),
         # with version
         ({'spec_style': 'suse', 'epochs': {}, 'requirements': {}},
-         'oslo.config', ('>=', '1.2.3'), 'python-oslo.config >= 1.2.3'),
+         'oslo.config', ('>=', '1.2.3'), None, 'python-oslo.config >= 1.2.3'),
         ({'spec_style': 'fedora', 'epochs': {}, 'requirements': {}},
-         'oslo.config', ('==', '1.2.3~a0'), 'python-oslo-config == 1.2.3~a0'),
+         'oslo.config', ('==', '1.2.3~a0'), None,
+         'python-oslo-config == 1.2.3~a0'),
         # with version, with epoch
         ({'spec_style': 'suse', 'epochs': {'oslo.config': 4},
           'requirements': {}},
-         'oslo.config', ('>=', '1.2.3'), 'python-oslo.config >= 4:1.2.3'),
+         'oslo.config', ('>=', '1.2.3'), None,
+         'python-oslo.config >= 4:1.2.3'),
         # without version, with epoch
         ({'spec_style': 'suse', 'epochs': {'oslo.config': 4},
           'requirements': {}},
-         'oslo.config', None, 'python-oslo.config'),
+         'oslo.config', None, None, 'python-oslo.config'),
         # with version, with requirements
         ({'spec_style': 'suse', 'epochs': {},
           'requirements': {'oslo.config' '1.2.3'}},
-         'oslo.config', ('>=', '4.5.6'), 'python-oslo.config >= 4.5.6'),
+         'oslo.config', ('>=', '4.5.6'), None, 'python-oslo.config >= 4.5.6'),
         # without version, with requirements
         ({'spec_style': 'suse', 'epochs': {},
           'requirements': {'oslo.config': '1.2.3'}},
-         'oslo.config', None, 'python-oslo.config >= 1.2.3'),
+         'oslo.config', None, None, 'python-oslo.config >= 1.2.3'),
         # without version, with requirements, with epoch
         ({'spec_style': 'suse', 'epochs': {'oslo.config': 4},
           'requirements': {'oslo.config': '1.2.3'}},
-         'oslo.config', None, 'python-oslo.config >= 4:1.2.3'),
+         'oslo.config', None, None, 'python-oslo.config >= 4:1.2.3'),
         # with version, with requirements, with epoch
         ({'spec_style': 'suse', 'epochs': {'oslo.config': 4},
           'requirements': {'oslo.config' '1.2.3'}},
-         'oslo.config', ('>=', '4.5.6'), 'python-oslo.config >= 4:4.5.6'),
+         'oslo.config', ('>=', '4.5.6'), None,
+         'python-oslo.config >= 4:4.5.6'),
+        # with version, with requirements, with epoch, python2
+        ({'spec_style': 'suse', 'epochs': {'oslo.config': 4},
+          'requirements': {'oslo.config' '1.2.3'}},
+         'oslo.config', ('>=', '4.5.6'), 'py2',
+         'python2-oslo.config >= 4:4.5.6'),
+        # with version, with requirements, with epoch, python3
+        ({'spec_style': 'suse', 'epochs': {'oslo.config': 4},
+          'requirements': {'oslo.config' '1.2.3'}},
+         'oslo.config', ('>=', '4.5.6'), 'py3',
+         'python3-oslo.config >= 4:4.5.6'),
+        # with version, with requirements, with epoch, python2 and python3
+        ({'spec_style': 'suse', 'epochs': {'oslo.config': 4},
+          'requirements': {'oslo.config' '1.2.3'}},
+         'oslo.config', ('>=', '4.5.6'), ['py2', 'py3'],
+         'python2-oslo.config >= 4:4.5.6 python3-oslo.config >= 4:4.5.6'),
+
     )
     @unpack
     def test_context_py2pkg(self, context, pkg_name, pkg_version,
-                            expected_result):
+                            py_versions, expected_result):
         self.assertEqual(
             renderspec.contextfuncs._context_py2pkg(
-                context, pkg_name, pkg_version), expected_result)
+                context, pkg_name, pkg_version, py_versions),
+            expected_result)
 
     def test_context_epoch_without_epochs(self):
         self.assertEqual(
@@ -158,6 +182,10 @@ class RenderspecTemplateFunctionTests(unittest.TestCase):
         # plain
         ({'spec_style': 'suse', 'epochs': {}, 'requirements': {}},
          "{{ py2pkg('requests') }}", "python-requests"),
+        # plain, with multiple py_versions
+        ({'spec_style': 'suse', 'epochs': {}, 'requirements': {}},
+         "{{ py2pkg('requests', py_versions=['py2', 'py3']) }}",
+         "python2-requests python3-requests"),
         # with version
         ({'spec_style': 'suse', 'epochs': {}, 'requirements': {}},
          "{{ py2pkg('requests', ('>=', '2.8.1')) }}",
@@ -176,6 +204,11 @@ class RenderspecTemplateFunctionTests(unittest.TestCase):
           'requirements': {'requests': '1.2.3'}},
          "{{ py2pkg('requests') }}",
          "python-requests >= 4:1.2.3"),
+        # without version, with epoch, with requirements, with py_versions
+        ({'spec_style': 'suse', 'epochs': {'requests': 4},
+          'requirements': {'requests': '1.2.3'}},
+         "{{ py2pkg('requests', py_versions=['py2']) }}",
+         "python2-requests >= 4:1.2.3"),
     )
     @unpack
     def test_render_func_py2pkg(self, context, string, expected_result):

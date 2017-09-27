@@ -1,3 +1,9 @@
+%if 0%{?rhel} || 0%{?fedora}
+%global rdo 1
+%endif
+%if 0%{?rhel} == 7
+%global skip_python3 1
+%endif
 {% extends ".spec" %}
 {% block build_requires %}
 BuildRequires:  {{ py2pkg('setuptools') }}

@@ -23,6 +23,18 @@ be done with::
 
   renderspec --spec-style suse example.spec.j2
 
+Different pyver variants
+************************
+
+For singlespec variant spec.j2 templates (i.e. templates that can build for
+multiple python flavors in parallel) it might be undesirable to expand requirements
+for a particular python flavor. In that case the option `--skip-pyversion` can
+be used to skip expansion for those dependencies:
+
+  renderspec --skip-pyversion py3 example.spec.j2
+
+For CentOS 7.x hosts :program:`renderspec` defaults to skipping the py3 expansion.
+
 Different template formats
 **************************
 The only supported input template format is currently called `spec.j2` (which is

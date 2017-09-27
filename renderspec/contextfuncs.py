@@ -147,12 +147,16 @@ def _context_epoch(context, pkg_name):
     return context['epochs'].get(pkg_name, 0)
 
 
-def _pymod2pkg_translate(pkg_name, spec_style, py_versions):
+def _pymod2pkg_translate(pkg_name, context, py_versions):
     """translate a given package name for a single or multiple py versions"""
     if py_versions and not isinstance(py_versions, (list, tuple)):
         py_versions = [py_versions]
-    kwargs = {'py_vers': py_versions} if py_versions else {}
-    translations = pymod2pkg.module2package(pkg_name, spec_style, **kwargs)
+    kwargs = {}
+    if py_versions:
+        kwargs['py_vers'] = list(set(py_versions) -
+                                 set((context['skip_pyversion'],)))
+    translations = pymod2pkg.module2package(
+        pkg_name, context['spec_style'], **kwargs)
     # we want always return a list but module2package() might return a string
     if not isinstance(translations, (list, tuple)):
         translations = [translations]
@@ -175,14 +179,12 @@ def _context_py2name(context, pkg_name=None, pkg_version=None,
                                 'py2name')
         pkg_name = context.vars[CONTEXT_VAR_PYPI_NAME]
     # return always a string to be backwards compat
-    return ' '.join(_pymod2pkg_translate(
-        pkg_name, context['spec_style'], py_versions))
+    return ' '.join(_pymod2pkg_translate(pkg_name, context, py_versions))
 
 
 def _context_py2pkg(context, pkg_name, pkg_version=None, py_versions=None):
     """generate a distro specific package name with optional version tuple."""
-    name_list = _pymod2pkg_translate(pkg_name, context['spec_style'],
-                                     py_versions)
+    name_list = _pymod2pkg_translate(pkg_name, context, py_versions)
 
     # if no pkg_version is given, look in the requirements and set one
     if not pkg_version:

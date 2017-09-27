@@ -31,19 +31,20 @@ from renderspec import versions
 from renderspec import contextfuncs
 
 
-def generate_spec(spec_style, epochs, requirements, input_template_format,
-                  input_template_path, output_path):
+def generate_spec(spec_style, epochs, requirements, skip_pyversion,
+                  input_template_format, input_template_path, output_path):
     """generate a spec file with the given style and input template"""
     if input_template_format == 'spec.j2':
         return _renderer_input_template_format_spec(
-            spec_style, epochs, requirements, input_template_path,
-            output_path)
+            spec_style, epochs, requirements, skip_pyversion,
+            input_template_path, output_path)
     else:
         raise Exception('Unknown input-template-format "%s"' %
                         input_template_format)
 
 
 def _renderer_input_template_format_spec(spec_style, epochs, requirements,
+                                         skip_pyversion,
                                          input_template_path, output_path):
     """render a 'traditional' .spec.j2 template into a .spec file"""
     env = Environment(loader=RenderspecLoader(
@@ -64,6 +65,7 @@ def _renderer_input_template_format_spec(spec_style, epochs, requirements,
         output_dir = None
     return template.render(spec_style=spec_style, epochs=epochs,
                            requirements=requirements,
+                           skip_pyversion=skip_pyversion,
                            input_template_dir=input_template_dir,
                            output_dir=output_dir)
 
@@ -100,6 +102,15 @@ def _get_default_distro():
         return "fedora"
     else:
         return "unknown"
+
+
+def _get_default_pyskips(distro):
+    # py3 building is all complicated on CentOS 7.x
+    if distro == 'fedora':
+        distname, distver, _ = platform.linux_distribution()
+        if 'CentOS' in distname and distver.startswith('7'):
+            return 'py3'
+    return None
 
 
 def _get_default_template():
@@ -145,6 +156,10 @@ def process_args():
     parser.add_argument("--spec-style", help="distro style you want to use. "
                         "default: %s" % (distro), default=distro,
                         choices=['suse', 'fedora'])
+    parser.add_argument("--skip-pyversion",
+                        help='Skip requirements for this pyversion',
+                        default=_get_default_pyskips(distro),
+                        choices=['py2', 'py3'])
     parser.add_argument("--epochs", help="yaml file with epochs listed.")
     parser.add_argument("input-template", nargs='?',
                         help="specfile jinja2 template to render. "
@@ -191,8 +206,9 @@ def main():
         output_path = None
 
     spec = generate_spec(args['spec_style'], epochs, requirements,
-                         args['input_template_format'], input_template,
-                         output_path)
+                         args['skip_pyversion'],
+                         args['input_template_format'],
+                         input_template, output_path)
     if output_path:
         print("Rendering: %s -> %s" % (input_template, output_path))
         with open(output_path, "w") as o:

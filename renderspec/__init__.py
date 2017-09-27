@@ -19,6 +19,7 @@ from __future__ import print_function
 import argparse
 import os
 import platform
+import string
 import sys
 
 from jinja2 import Environment
@@ -77,7 +78,22 @@ def _is_fedora(distname):
 
 
 def _get_default_distro():
-    distname, version, id_ = platform.linux_distribution()
+    distname, _, _ = platform.linux_distribution()
+
+    # newer distros only have /etc/os-release and then platform doesn't work
+    # anymore and upstream does not want to fix it:
+    # https://bugs.python.org/issue1322
+    if not distname and 'Linux' in platform.system():
+        try:
+            with open('/etc/os-release', 'r') as lsb_release:
+                for l in lsb_release:
+                    if l.startswith('ID_LIKE='):
+                        distname = l.partition('=')[2].strip(
+                            string.punctuation + string.whitespace)
+                        break
+        except OSError:
+            print('WARN: Unable to determine Linux distribution')
+
     if "suse" in distname.lower():
         return "suse"
     elif _is_fedora(distname):

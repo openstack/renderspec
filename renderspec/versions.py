@@ -24,13 +24,13 @@ def get_requirements(lines):
     """parse the given lines and return a dict with pkg_name->version.
     lines must follow PEP0508"""
     requires = {}
-    for l in lines:
+    for line in lines:
         # skip comments and empty lines
-        if l.startswith('#') or len(l.strip()) == 0:
+        if line.startswith('#') or len(line.strip()) == 0:
             continue
         # remove trailing comments
-        l = l.split('#')[0].rstrip(' ')
-        r = Requirement(l)
+        line = line.split('#')[0].rstrip(' ')
+        r = Requirement(line)
         # check if we need the requirement
         if r.marker:
             # TODO (toabctl): currently we hardcode python 2.7 and linux2

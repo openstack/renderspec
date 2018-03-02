@@ -2,8 +2,8 @@
 Team and repository tags
 ========================
 
-.. image:: http://governance.openstack.org/badges/renderspec.svg
-    :target: http://governance.openstack.org/reference/tags/index.html
+.. image:: https://governance.openstack.org/tc/badges/renderspec.svg
+    :target: https://governance.openstack.org/tc/reference/tags/index.html
 
 .. Change things from this point on
 
@@ -16,7 +16,7 @@ and follow their policies and processes.
 
 Documentation for renderspec can be found at
 
-   http://docs.openstack.org/developer/renderspec/
+   https://docs.openstack.org/renderspec/latest/
 
 For more information about the OpenStack rpm packaging initiative, please
 follow the link to the wiki page:

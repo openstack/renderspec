@@ -13,7 +13,7 @@ dist
 renderspec.egg-info
 ChangeLog
 run_tests.err.log
-.testrepository
+.stestr/
 .tox
 doc/source/api
 doc/build

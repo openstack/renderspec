@@ -25,13 +25,13 @@ is using ``tox``. To run the testsuite for python 2.7, do:
 
 Contributing
 ============
-Code is hosted at `git.openstack.org`_. Submit bugs to the
+Code is hosted at `opendev.org`_. Submit bugs to the
 renderspec project on `Launchpad`_. Submit code to the
 openstack/renderspec project using `Gerrit`_.
 
-.. _git.openstack.org: https://git.openstack.org/cgit/openstack/renderspec
+.. _opendev.org: https://opendev.org/openstack/renderspec
 .. _Launchpad: https://launchpad.net/renderspec
-.. _Gerrit: http://docs.openstack.org/infra/manual/developers.html#development-workflow
+.. _Gerrit: https://docs.openstack.org/infra/manual/developers.html#development-workflow
 
 
 Indices and tables

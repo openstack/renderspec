@@ -36,7 +36,7 @@ Developers wishing to work on renderspec should always base
 their work on the latest code, available from the master GIT
 repository at:
 
-   https://git.openstack.org/cgit/openstack/renderspec
+   https://opendev.org/openstack/renderspec
 
 Developers should also join the discussion on the mailing list,
 at:

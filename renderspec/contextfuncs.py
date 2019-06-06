@@ -153,9 +153,8 @@ def _pymod2pkg_translate(pkg_name, context, py_versions):
         py_versions = [py_versions]
     kwargs = {}
     if py_versions:
-        kwargs['py_vers'] = [
-            i for i in py_versions if i not in context['skip_pyversion']
-        ]
+        kwargs['py_vers'] = [i for i in py_versions if i not in
+                             set((context['skip_pyversion'],))]
 
     translations = pymod2pkg.module2package(
         pkg_name, context['spec_style'], **kwargs)

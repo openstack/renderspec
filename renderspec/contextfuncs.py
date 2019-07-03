@@ -207,6 +207,14 @@ def _context_py2pkg(context, pkg_name, pkg_version=None, py_versions=None):
     return ' '.join(['%s%s' % (name, v_str) for name in name_list])
 
 
+def _context_py2(context, pkg_name, pkg_version=None):
+    return _context_py2pkg(context, pkg_name, pkg_version, py_versions=['py2'])
+
+
+def _context_py3(context, pkg_name, pkg_version=None):
+    return _context_py2pkg(context, pkg_name, pkg_version, py_versions=['py3'])
+
+
 def _context_license_spdx(context, value):
     """convert a given known spdx license to another one"""
     # more values can be taken from from https://github.com/hughsie/\
@@ -263,6 +271,16 @@ def _globals_py2pkg(context, pkg_name, pkg_version=None, py_versions=None):
 
 
 @contextfunction
+def _globals_py2(context, pkg_name, pkg_version=None):
+    return _context_py2(context, pkg_name, pkg_version)
+
+
+@contextfunction
+def _globals_py3(context, pkg_name, pkg_version=None):
+    return _context_py3(context, pkg_name, pkg_version)
+
+
+@contextfunction
 def _globals_fetch_source(context, url):
     return _context_fetch_source(context, url)
 
@@ -309,6 +327,8 @@ def env_register_filters_and_globals(env):
     env.globals['py2rpmversion'] = _globals_py2rpmversion
     env.globals['py2rpmrelease'] = _globals_py2rpmrelease
     env.globals['py2pkg'] = _globals_py2pkg
+    env.globals['py2'] = _globals_py2
+    env.globals['py3'] = _globals_py3
     env.globals['py2name'] = _globals_py2name
     env.globals['epoch'] = _globals_epoch
     env.globals['license'] = _globals_license_spdx

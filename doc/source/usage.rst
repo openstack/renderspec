@@ -259,6 +259,14 @@ renders to::
 
   BuildRequires: python2-oslo-config >= 2:3.4.0 python3-oslo-config >= 2:3.4.0
 
+context function `py2`
+**********************
+Similar to `py2pkg` but uses a `py_versions` set to `py2`
+
+context function `py3`
+**********************
+Similar to `py2pkg` but uses a `py_versions` set to `py3`.
+
 context function `epoch`
 ************************
 

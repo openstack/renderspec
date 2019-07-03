@@ -134,6 +134,32 @@ class RenderspecContextFunctionTests(unittest.TestCase):
                 context, pkg_name, pkg_version, py_versions),
             expected_result)
 
+    @data(
+        ({'spec_style': 'suse', 'epochs': {}, 'requirements': {}},
+         'oslo.config', None, 'python2-oslo.config'),
+    )
+    @unpack
+    def test_context_py2(self, context, pkg_name, pkg_version,
+                         expected_result):
+        context.setdefault('skip_pyversion', ())
+        self.assertEqual(
+            renderspec.contextfuncs._context_py2(
+                context, pkg_name, pkg_version),
+            expected_result)
+
+    @data(
+        ({'spec_style': 'suse', 'epochs': {}, 'requirements': {}},
+         'oslo.config', None, 'python3-oslo.config'),
+    )
+    @unpack
+    def test_context_py3(self, context, pkg_name, pkg_version,
+                         expected_result):
+        context.setdefault('skip_pyversion', ())
+        self.assertEqual(
+            renderspec.contextfuncs._context_py3(
+                context, pkg_name, pkg_version),
+            expected_result)
+
     def test_context_epoch_without_epochs(self):
         self.assertEqual(
             renderspec.contextfuncs._context_epoch(

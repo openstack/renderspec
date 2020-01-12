@@ -15,10 +15,7 @@
 # limitations under the License.
 
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 from ddt import data, ddt, unpack
 

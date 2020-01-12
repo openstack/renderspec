@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
-
 from contextlib import closing
 from contextlib import contextmanager
 from email.parser import HeaderParser
@@ -23,17 +21,15 @@ import os
 import shutil
 import tarfile
 import tempfile
+import urllib
 import zipfile
-
-import six
-from six.moves.urllib.request import urlopen
 
 
 def _download_file(url, dest_dir, dest_filename):
     """download a given url to a given destination directory and
     destination filenamee"""
     filename = os.path.join(dest_dir, dest_filename)
-    with closing(urlopen(url)) as response:  # nosec
+    with closing(urllib.urlopen(url)) as response:  # nosec
         with open(filename, 'wb') as f:
             while True:
                 buf = response.read(8192)
@@ -68,7 +64,7 @@ def _extract_archive_to_tempdir(archive_filename):
 def _find_archives(directories, basename):
     """return a list of archives in the given directories
     or an empty list if no archive(s) can be found"""
-    if isinstance(directories, six.string_types):
+    if isinstance(directories, str):
         directories = [directories]
 
     return sorted(

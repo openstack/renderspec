@@ -5,4 +5,3 @@ pymod2pkg!=0.8.0,>=0.7.0 # Apache-2.0
 Jinja2>=2.10 # BSD License (3 clause)
 PyYAML>=3.10 # MIT
 packaging>=16.5 # Apache-2.0
-six>=1.10.0 # MIT

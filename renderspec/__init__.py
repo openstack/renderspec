@@ -78,7 +78,11 @@ def _is_fedora(distname):
 
 
 def _get_default_distro():
-    distname, _, _ = platform.linux_distribution()
+
+    distname = None
+    # Python 3.8 or newer does no longer provide this function
+    if hasattr(platform, 'linux_distribution'):
+        distname, _, _ = platform.linux_distribution()
 
     # newer distros only have /etc/os-release and then platform doesn't work
     # anymore and upstream does not want to fix it:

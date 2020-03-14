@@ -126,10 +126,11 @@ in the `Source` tag and the `%prep` sections `%setup`. So use e.g. ::
 
   {% set upstream_version = upstream_version('1.2.3.0rc1') %}
   {% set rpm_release = '1' %}
+  {% set source = url_pypi() %}
   %name oslo.config
   Version: {{ py2rpmversion() }}
   Release: {{ py2rpmrelease() }}
-  Source0: https://pypi.io/packages/source/o/%{sname}/%{sname}-{{ upstream_version }}.tar.gz
+  Source0: {{ source }}
   %prep
   %setup -q -n %{sname}-{{upstream_version}}
 
@@ -138,7 +139,7 @@ which would render (with suse-style) to::
   %name oslo.config
   Version: 1.2.3.0~rc1
   Release: 0
-  Source0: https://pypi.io/packages/source/o/%{sname}/%{sname}-1.2.3rc1.tar.gz
+  Source0: https://files.pythonhosted.org/packages/source/o/%{sname}/%{sname}-1.2.3rc1.tar.gz
   %prep
   %setup -q -n %{sname}-1.2.3.0rc1
 

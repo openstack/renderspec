@@ -21,7 +21,7 @@ import os
 import shutil
 import tarfile
 import tempfile
-import urllib
+import urllib.request
 import zipfile
 
 
@@ -29,7 +29,7 @@ def _download_file(url, dest_dir, dest_filename):
     """download a given url to a given destination directory and
     destination filenamee"""
     filename = os.path.join(dest_dir, dest_filename)
-    with closing(urllib.urlopen(url)) as response:  # nosec
+    with closing(urllib.request.urlopen(url)) as response:  # nosec
         with open(filename, 'wb') as f:
             while True:
                 buf = response.read(8192)

@@ -285,7 +285,8 @@ With an existing yaml (and `oslo.config` epoch set to 2), this would be rendered
 
 
 context function `license`
-************************
+**************************
+
 The templates use `SPDX`_ license names and theses names are translated for different distros.
 For example, a project uses the `Apache-2.0` license::
 

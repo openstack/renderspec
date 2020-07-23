@@ -177,7 +177,7 @@ different distribution specific guidelines.
 .. note:: For translating pypi names (the name a python package has on `pypi.python.org`_
           to distro specific names, internally a module called `pymod2pkg`_ is used.
 
-The prefered way to use `py2name` is to set the context variable `pypi_name` and
+The preferred way to use `py2name` is to set the context variable `pypi_name` and
 then call `py2name()` without any parameters. In that case, the context variable
 is used::
 

@@ -95,8 +95,20 @@ def _get_default_distro():
                         distname = l.partition('=')[2].strip(
                             string.punctuation + string.whitespace)
                         break
+            # Later Fedora versions (e.g. Fedora 32) do not include ID_LIKE
+            # in /etc/os-release, so we need to rely on ID
+            if not distname:
+                with open('/etc/os-release', 'r') as lsb_release:
+                    for l in lsb_release:
+                        if l.startswith('ID='):
+                            distname = l.partition('=')[2].strip(
+                                string.punctuation + string.whitespace)
+                            break
         except OSError:
             print('WARN: Unable to determine Linux distribution')
+
+    if not distname:
+        print('WARN: Unable to determine Linux distribution')
 
     if "suse" in distname.lower():
         return "suse"
@@ -109,9 +121,12 @@ def _get_default_distro():
 def _get_default_pyskips(distro):
     # py3 building is all complicated on CentOS 7.x
     if distro == 'fedora':
-        distname, distver, _ = platform.linux_distribution()
-        if 'CentOS' in distname and distver.startswith('7'):
-            return 'py3'
+        # Python 3.8 or newer does no longer provide this function
+        # CentOS 7 does not have Python 3.8
+        if hasattr(platform, 'linux_distribution'):
+            distname, distver, _ = platform.linux_distribution()
+            if 'CentOS' in distname and distver.startswith('7'):
+                return 'py3'
     return None
 
 

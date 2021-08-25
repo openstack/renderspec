@@ -13,15 +13,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import jinja2
 import os
 
-from jinja2 import contextfilter
-from jinja2 import contextfunction
 from jinja2.exceptions import TemplateRuntimeError
 from packaging.version import parse
 import pymod2pkg
 
 from renderspec import utils
+
+# NOTE(jpena): Jinja2 3.0 deprecated contextfilter and contextfuncion,
+# and will remove them in 3.1
+if hasattr(jinja2, "pass_context"):
+    contextfilter = jinja2.pass_context
+    contextfunction = jinja2.pass_context
+else:
+    from jinja2 import contextfilter
+    from jinja2 import contextfunction
 
 
 # a variable that needs to be set for some functions in the context

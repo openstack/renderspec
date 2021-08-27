@@ -22,7 +22,7 @@ from ddt import data, ddt, unpack
 from jinja2 import Environment
 from jinja2.exceptions import TemplateRuntimeError
 
-from mock import Mock, patch
+from unittest.mock import Mock, patch
 import os
 import renderspec
 import renderspec.contextfuncs

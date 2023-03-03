@@ -172,7 +172,7 @@ def process_args():
                         "default: autodetect")
     parser.add_argument("--spec-style", help="distro style you want to use. "
                         "default: %s" % (distro), default=distro,
-                        choices=['suse', 'fedora'])
+                        choices=['suse', 'suse_py39', 'fedora'])
     parser.add_argument("--skip-pyversion",
                         help='Skip requirements for this pyversion',
                         default=_get_default_pyskips(distro),

@@ -250,9 +250,9 @@ def _context_license_spdx(context, value):
 
     if context['spec_style'] == 'fedora':
         return mapping[value]
-    else:
-        # just use the spdx license name
-        return value
+
+    # just use the spdx license name
+    return value
 
 
 ###############

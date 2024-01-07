@@ -90,18 +90,18 @@ def _get_default_distro():
     if not distname and 'Linux' in platform.system():
         try:
             with open('/etc/os-release', 'r') as lsb_release:
-                for l in lsb_release:
-                    if l.startswith('ID_LIKE='):
-                        distname = l.partition('=')[2].strip(
+                for line in lsb_release:
+                    if line.startswith('ID_LIKE='):
+                        distname = line.partition('=')[2].strip(
                             string.punctuation + string.whitespace)
                         break
             # Later Fedora versions (e.g. Fedora 32) do not include ID_LIKE
             # in /etc/os-release, so we need to rely on ID
             if not distname:
                 with open('/etc/os-release', 'r') as lsb_release:
-                    for l in lsb_release:
-                        if l.startswith('ID='):
-                            distname = l.partition('=')[2].strip(
+                    for line in lsb_release:
+                        if line.startswith('ID='):
+                            distname = line.partition('=')[2].strip(
                                 string.punctuation + string.whitespace)
                             break
         except OSError:
@@ -172,7 +172,7 @@ def process_args():
                         "default: autodetect")
     parser.add_argument("--spec-style", help="distro style you want to use. "
                         "default: %s" % (distro), default=distro,
-                        choices=['suse', 'suse_py39', 'fedora'])
+                        choices=['suse', 'suse_py39', 'suse_py311', 'fedora'])
     parser.add_argument("--skip-pyversion",
                         help='Skip requirements for this pyversion',
                         default=_get_default_pyskips(distro),
